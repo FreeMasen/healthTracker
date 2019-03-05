@@ -31,13 +31,7 @@ export class SeederComponent {
         }
         let worker;
         try {
-            let url: string;
-            if (location.href.indexOf('github.io') > -1) {
-                url = '/healthTracker/assets/worker.js';
-            } else {
-                url = '/assets/worker.js';
-            }
-            worker = new Worker(url);
+            worker = new Worker('./assets/worker.js');
         } catch (e) {
             console.error('error creating worker', e);
         }
