@@ -104,4 +104,10 @@ export class Data {
     async removeMeal(id: number) {
         return this.db.removeMeal(id);
     }
+
+    async getAllUserData() {
+        let ret = await this.db.getAllUserData();
+        console.log('data', ret);
+        return ret;
+    }
 }

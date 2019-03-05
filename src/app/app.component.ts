@@ -37,4 +37,22 @@ export class AppComponent {
     }
     ngAfterContentInit() { 
     }
+
+    async download() {
+        console.log('download');
+        let data = await this.data.getAllUserData();
+        console.log('data', data);
+        let json = JSON.stringify(data);
+        console.log('json', json);
+        let b = new Blob([json], {type: 'text/json'});
+        let url = URL.createObjectURL(b);
+        let link = document.createElement('a');
+        console.log('url', url);
+        link.setAttribute('href', url);
+        link.setAttribute('download', 'healthTrackerHistory.json');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    }
 }

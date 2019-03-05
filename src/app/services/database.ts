@@ -139,7 +139,7 @@ export class Day {
         public id?: number,
     ) {
         if (typeof date === 'string') {
-            this.date = moment(date);
+            this.date = moment(date, DAY_FORMAT);
         } else {
             this.date = date;
         }
@@ -161,7 +161,7 @@ export class Day {
         return this.meals.reduce((a, m) => a + m.protein(), 0)
     }
 
-    toJSON(): IDay {
+    forDb(): IDay {
         let ret: IDay = {
             date: this.date.format('YYYY/MM/DD')
         }
@@ -215,7 +215,7 @@ export class Meal {
         let minutes = `0${this.time.minutes}`.substr(-2);
         return `${hours}:${minutes} ${suffix}`;
     }
-    toJSON(): IMeal {
+    forDb(): IMeal {
         let ret: IMeal = {
             name: this.name,
             time: this.time,
@@ -331,8 +331,12 @@ export class Database extends Dexie {
             let id = await this.days.put(day);
             return new Day(date, [], id);
         }
+        return this.fillDay(day);
+    }
+
+    private async fillDay(day: IDay): Promise<Day> {
         let dbMeals = await this.meals.where('dayId').equals(day.id).toArray();
-        let ret = new Day(date, new Array(dbMeals.length), day.id);
+        let ret = new Day(day.date, new Array(dbMeals.length), day.id);
         for (let i = 0; i < dbMeals.length;i++) {
             let dbMeal = dbMeals[i];
             let dbContents = await this.mealItems
@@ -509,5 +513,18 @@ export class Database extends Dexie {
             }
         }
         updateCb('complete', table.name, batch.length, batch.length);
+    }
+
+    async getAllUserData() {
+        let dbDays = await this.days.toArray();
+        let mealHistory = new Array(dbDays.length);
+        for (let i = 0;i < dbDays.length;i++) {
+            mealHistory[i] = await this.fillDay(dbDays[i]);
+        }
+        let bodyHistory = await this.users.toArray();
+        return {
+            mealHistory,
+            bodyHistory,
+        }
     }
 }

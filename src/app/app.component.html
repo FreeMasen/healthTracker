@@ -21,7 +21,10 @@
     <mat-icon>menu</mat-icon>
   </button> -->
   <h1 routerLink="./" style="cursor:pointer;" title="Dashboard">Health Data Tracker</h1>
-  <h1 routerLink="./about" style="cursor:pointer;">About</h1>
+  <div style="display: flex;flex-flow:row;align-items:center;">
+    <span routerLink="./about" style="cursor:pointer;">About</span>
+    <mat-icon (click)="download()" style="cursor:pointer;margin-left:10px;">get_app</mat-icon>  
+  </div>
 </mat-toolbar>
 <main class="body">
   <message-toast></message-toast>
