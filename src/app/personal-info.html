@@ -1,0 +1,42 @@
+<mat-card id="personal-info-entry">
+    <mat-card-title>Your Information</mat-card-title>
+    <mat-card-content class="info-entry-container">
+        <mat-form-field class="info-entry" id="weight-entry">
+            <mat-label>Weight</mat-label>
+            <input required type="number" min="0" matInput [(ngModel)]="weight">
+        </mat-form-field>
+        <div class="info-entry" id="height-entry">
+            <mat-form-field id="height-entry-feet">
+                <mat-label id="height-entry-label">Height</mat-label>
+                <input required type="number" min="0" matInput [(ngModel)]="heightFeet" placeholder="feet">
+            </mat-form-field>
+            <mat-form-field id="height-entry-inches">
+                <mat-label>Inches</mat-label>
+                <input required type="number" min="0" max="11" matInput [(ngModel)]="heightInches">
+            </mat-form-field>
+        </div>
+        <mat-form-field class="info-entry" id="age-entry">
+            <mat-label>Age</mat-label>
+            <input required type="number" min="0" matInput [(ngModel)]="age" />
+        </mat-form-field>
+        <mat-form-field class="info-entry" id="body-fat-percent-entry">
+            <mat-label>Body Fat</mat-label>
+            <input required type="number" min="2" max="100" matInput [(ngModel)]="bodyFatPercent">
+            <span matSuffix>%</span>
+        </mat-form-field>
+        <mat-form-field class="info-entry" id="activity-level-entry">
+            <mat-select [(ngModel)]="activityLevel" placeholder="Activity Level">
+                <mat-option *ngFor="let opt of activityLevels" [value]="opt">
+                    {{opt}}
+                </mat-option>
+            </mat-select>
+        </mat-form-field>
+        <mat-form-field class="info-entry" id="weight-target-entry">
+            <mat-label>Target Weight</mat-label>
+            <input required type="number" min="0" matInput [(ngModel)]="weightTarget">
+        </mat-form-field>
+    </mat-card-content>
+    <mat-card-footer style="display: flex;flex-flow:row;justify-content:flex-end;">
+        <button style="margin: 5px" color="primary" mat-raised-button (click)="saveInfo()">Save</button>
+    </mat-card-footer>
+</mat-card>

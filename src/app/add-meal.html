@@ -1,0 +1,128 @@
+<mat-horizontal-stepper>
+    <mat-step *ngIf="basicInfo" [stepControl]="basicInfo">
+        <form [formGroup]="basicInfo">
+            <ng-template matStepLabel>Meal Details</ng-template>
+            <mat-form-field style="margin-right: 5px;">
+                <mat-label>Date</mat-label>
+                <input matInput [matDatepicker]="picker" formControlName="date">
+                <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                <mat-datepicker #picker></mat-datepicker>
+            </mat-form-field>
+            <mat-form-field style="margin-right: 5px;">
+                <mat-label>Time</mat-label>
+                <input matInput formControlName="time" type="time" />
+            </mat-form-field>
+            <mat-form-field>
+                <mat-label>Meal Name</mat-label>
+                <mat-select matInput type="text" formControlName="name" >
+                    <mat-option *ngFor="let value of mealNames" [value]="value">{{value}}</mat-option>
+                </mat-select>
+            </mat-form-field>
+        </form>
+        <button mat-button matStepperNext>Next</button>
+    </mat-step>
+    <mat-step>
+        <ng-template matStepLabel>Add Food</ng-template>
+        <form [formGroup]="addFood">
+            <mat-form-field style="margin-right: 5px;">
+                <mat-label>Description</mat-label>
+                <input matInput formControlName="desc" />
+            </mat-form-field>
+            <mat-form-field style="margin-right: 5px; width: 75px;">
+                <mat-label>Calories</mat-label>
+                <input matInput formControlName="calories" type="number" min="0" />
+            </mat-form-field>
+            <mat-form-field style="margin-right: 5px; width: 75px;">
+                <mat-label>Carbs</mat-label>
+                <input matInput formControlName="carbs" type="number" min="0" />
+            </mat-form-field>
+            <mat-form-field style="margin-right: 5px; width: 75px;">
+                <mat-label>Fat</mat-label>
+                <input matInput formControlName="fat" type="number" min="0" />
+            </mat-form-field>
+            <mat-form-field style="margin-right: 5px; width: 75px;">
+                <mat-label>Protein</mat-label>
+                <input matInput formControlName="protein" type="number" min="0" />
+            </mat-form-field>
+            <button mat-mini-fab color="primary" (click)="addMealItem()">
+                <mat-icon>add</mat-icon>
+            </button>
+        </form>
+        <mat-table style="width: 100%;" [dataSource]="items">
+            <ng-container matColumnDef="name">
+                <mat-header-cell *matHeaderCellDef> Description </mat-header-cell>
+                <mat-cell *matCellDef="let mealItem"> {{mealItem.name}} </mat-cell>
+            </ng-container>
+            <ng-container matColumnDef="calories">
+                <mat-header-cell *matHeaderCellDef> Calories </mat-header-cell>
+                <mat-cell *matCellDef="let mealItem"> {{mealItem.calories}} </mat-cell>
+            </ng-container>
+            <ng-container matColumnDef="carbs">
+                <mat-header-cell *matHeaderCellDef> Carbs </mat-header-cell>
+                <mat-cell *matCellDef="let mealItem"> {{mealItem.carbs}} </mat-cell>
+            </ng-container>
+            <ng-container matColumnDef="fat">
+                <mat-header-cell *matHeaderCellDef> Fat </mat-header-cell>
+                <mat-cell *matCellDef="let mealItem"> {{mealItem.fat}} </mat-cell>
+            </ng-container>
+            <ng-container matColumnDef="protein">
+                <mat-header-cell *matHeaderCellDef> Fat </mat-header-cell>
+                <mat-cell *matCellDef="let mealItem"> {{mealItem.protein}} </mat-cell>
+            </ng-container>
+            <ng-container matColumnDef="delete">
+                <mat-header-cell *matHeaderCellDef>
+                    <mat-icon>delete</mat-icon>
+                </mat-header-cell>
+                <mat-cell *matCellDef="let i = index;">
+                    <button style="margin-left: 5px;" mat-mini-fab (click)="removeItem(i)">
+                        <mat-icon>delete</mat-icon>
+                    </button>
+                </mat-cell>
+            </ng-container>
+            <mat-row *matHeaderRowDef="columnsToDisplay"></mat-row>
+            <mat-row *matRowDef="let myRowData; columns: columnsToDisplay"></mat-row>
+        </mat-table>
+        <button mat-button matStepperPrevious>Back</button>
+        <button mat-button matStepperNext>Next</button>
+    </mat-step>
+    <mat-step>
+        <ng-template matStepLabel>Confirm Meal</ng-template>
+        <div>
+            <span style="margin-right: 5px;">{{mealName}}</span>
+            <span style="margin-right: 5px;">{{mealDate.format("YYYY/MM/DD")}}</span>
+            <span style="margin-right: 5px;">{{mealDate.format("h:mm a")}}</span>
+        </div>
+        <mat-table style="width: 100%;" [dataSource]="items">
+                <ng-container matColumnDef="name">
+                    <mat-header-cell *matHeaderCellDef> Description </mat-header-cell>
+                    <mat-cell *matCellDef="let mealItem"> {{mealItem.name}} </mat-cell>
+                    <mat-footer-cell *matFooterCellDef>Total</mat-footer-cell>
+                </ng-container>
+                <ng-container matColumnDef="calories">
+                    <mat-header-cell *matHeaderCellDef> Calories </mat-header-cell>
+                    <mat-cell *matCellDef="let mealItem"> {{mealItem.calories}} </mat-cell>
+                    <mat-footer-cell *matFooterCellDef>{{calories}}</mat-footer-cell>
+                </ng-container>
+                <ng-container matColumnDef="carbs">
+                    <mat-header-cell *matHeaderCellDef> Carbs </mat-header-cell>
+                    <mat-cell *matCellDef="let mealItem"> {{mealItem.carbs}} </mat-cell>
+                    <mat-footer-cell *matFooterCellDef>{{carbs}}</mat-footer-cell>
+                </ng-container>
+                <ng-container matColumnDef="fat">
+                    <mat-header-cell *matHeaderCellDef> Fat </mat-header-cell>
+                    <mat-cell *matCellDef="let mealItem"> {{mealItem.fat}} </mat-cell>
+                    <mat-footer-cell *matFooterCellDef>{{fat}}</mat-footer-cell>
+                </ng-container>
+                <ng-container matColumnDef="protein">
+                    <mat-header-cell *matHeaderCellDef> Fat </mat-header-cell>
+                    <mat-cell *matCellDef="let mealItem"> {{mealItem.protein}} </mat-cell>
+                    <mat-footer-cell *matFooterCellDef>{{protein}}</mat-footer-cell>
+                </ng-container>
+                <mat-row *matHeaderRowDef="confirmColumns"></mat-row>
+                <mat-row *matRowDef="let myRowData; columns: confirmColumns"></mat-row>
+                <mat-row *matFooterRowDef="confirmColumns" style="font-weight: bold;"></mat-row>
+            </mat-table>
+            <button mat-button matStepperPrevious>Back</button>
+        <button mat-button (click)="saveMeal()">Confirm</button>
+    </mat-step>
+</mat-horizontal-stepper>

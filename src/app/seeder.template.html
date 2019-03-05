@@ -1,0 +1,11 @@
+<personal-info></personal-info>
+<mat-card style="margin-top: 5px;">
+    <mat-card-title>Setting up Local Data Tables</mat-card-title>
+    <mat-list *ngFor="let table of tables">
+        <mat-list-item>
+            <span style="font-size: 16pt;font-weight: bold;" matLine>{{table.table | tableName}}</span>
+            <span style="font-size: 11pt;color: rgba(0,0,0,0.5);" matLine>{{table.state | state}}</span>
+            <mat-progress-bar matLine mode="{{(table.state === 'inserting' || table.state === 'complete') ? 'determinate' : 'indeterminate'}}" value="{{table.value}}"></mat-progress-bar>
+        </mat-list-item>
+    </mat-list>
+</mat-card>

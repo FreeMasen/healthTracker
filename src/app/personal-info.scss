@@ -1,0 +1,16 @@
+.info-entry-container {
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: flex-start;
+    align-items: flex-start;
+    align-content: flex-start;
+    * { 
+        margin-right: 5px;
+    }
+}
+
+#height-entry {
+    * {
+        width: 100px;
+    }
+}

@@ -1,0 +1,13 @@
+<div class="search-form">
+    <mat-form-field appearance="fill" class="search-term">
+        <input matInput placeholder="Food" [formControl]="term">
+    </mat-form-field>
+    <div class="search-results">
+        <mat-list>
+            <mat-list-item *ngFor="let food of foods" (click)="foodClicked(food.id)">
+                <span style="padding-right: 5px;" *ngIf="food.manufacturer && food.manufacturer.length > 0">{{food.manufacturer}}</span>
+                <span>{{food.desc}}</span>
+            </mat-list-item>
+        </mat-list>
+    </div>
+</div>

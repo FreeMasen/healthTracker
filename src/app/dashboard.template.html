@@ -1,0 +1,105 @@
+<mat-card-title>Dashboard</mat-card-title>
+<mat-card *ngIf="today">
+    <mat-card-title style="display: flex; flex-flow: row; justify-content: space-between;align-items:center;">
+        <span>{{currentDate()}}</span>
+        <div style="display: flex; flex-flow: row; justify-content: space-between;align-items:center;">
+            <button (click)="prevDay()" mat-mini-fab style="margin-right: 10px;">
+                <mat-icon>keyboard_arrow_left</mat-icon>
+            </button>
+            <mat-icon>calendar_today</mat-icon>
+            <button (click)="nextDay()" [disabled]="canGoForward()" mat-mini-fab style="margin-left: 10px;">
+                <mat-icon>keyboard_arrow_right</mat-icon>
+            </button>
+        </div>
+    </mat-card-title>
+
+    <mat-card-content >
+        <mat-table style="width: 100%;" [dataSource]="today.meals">
+                <ng-container matColumnDef="name">
+                    <mat-header-cell *matHeaderCellDef> Description </mat-header-cell>
+                    <mat-cell *matCellDef="let meal"> {{meal.name}} </mat-cell>
+                    <mat-footer-cell *matFooterCellDef>Total</mat-footer-cell>
+                </ng-container>
+                <ng-container matColumnDef="time">
+                    <mat-header-cell *matHeaderCellDef> Time </mat-header-cell>
+                    <mat-cell *matCellDef="let meal"> {{meal.formattedTime()}} </mat-cell>
+                    <mat-footer-cell *matFooterCellDef></mat-footer-cell>
+                </ng-container>
+                <ng-container matColumnDef="calories">
+                    <mat-header-cell *matHeaderCellDef> Calories </mat-header-cell>
+                    <mat-cell *matCellDef="let meal"> {{meal.calories()}} </mat-cell>
+                    <mat-footer-cell *matFooterCellDef>{{today.calories()}}</mat-footer-cell>
+                </ng-container>
+                <ng-container matColumnDef="carbs">
+                    <mat-header-cell *matHeaderCellDef> Carbs </mat-header-cell>
+                    <mat-cell *matCellDef="let meal"> {{meal.carbs().toFixed(2)}} </mat-cell>
+                    <mat-footer-cell *matFooterCellDef>{{today.carbs().toFixed(2)}}</mat-footer-cell>
+                </ng-container>
+                <ng-container matColumnDef="fat">
+                    <mat-header-cell *matHeaderCellDef> Fat </mat-header-cell>
+                    <mat-cell *matCellDef="let meal"> {{meal.fat().toFixed(2)}} </mat-cell>
+                    <mat-footer-cell *matFooterCellDef>{{today.fat().toFixed(2)}}</mat-footer-cell>
+                </ng-container>
+                <ng-container matColumnDef="protein">
+                    <mat-header-cell *matHeaderCellDef> Protein </mat-header-cell>
+                    <mat-cell *matCellDef="let meal"> {{meal.protein().toFixed(2)}} </mat-cell>
+                    <mat-footer-cell *matFooterCellDef>{{today.protein().toFixed(2)}}</mat-footer-cell>
+                </ng-container>
+                <ng-container matColumnDef="delete">
+                    <mat-header-cell *matHeaderCellDef>
+                        <mat-icon style="padding-left: 13px;">delete</mat-icon>
+                    </mat-header-cell>
+                    <mat-cell *matCellDef="let meal">
+                        <button style="margin-left: 5px;" mat-mini-fab (click)="removeMeal(meal.id)">
+                            <mat-icon>delete</mat-icon>
+                        </button>
+                    </mat-cell>
+                    <mat-footer-cell *matFooterCellDef></mat-footer-cell>
+                </ng-container>
+                <mat-row *matHeaderRowDef="mealColumns"></mat-row>
+                <mat-row *matRowDef="let myRowData; columns: mealColumns"></mat-row>
+                <mat-row *matFooterRowDef="mealColumns" style="font-weight: bold;"></mat-row>
+        </mat-table>    
+    </mat-card-content>
+    <mat-card-footer style="display: flex;flex-flow: row; justify-content: flex-end;">
+        <button style="margin: 5px;" mat-mini-fab routerLink="/meal/add">
+            <mat-icon>add</mat-icon>
+        </button>
+    </mat-card-footer>
+</mat-card>
+<mat-card style="margin-top: 5px;">
+    <mat-card-title>Body History</mat-card-title>
+    <mat-card-content style="width: 100%;">
+        <mat-table style="width: 100%;" [dataSource]="history">
+                <ng-container matColumnDef="updated">
+                    <mat-header-cell *matHeaderCellDef> Date </mat-header-cell>
+                    <mat-cell *matCellDef="let user"> {{user.updated.format('MMM DD, YYYY')}} </mat-cell>
+                </ng-container>
+                <ng-container matColumnDef="weight">
+                    <mat-header-cell *matHeaderCellDef> Weight </mat-header-cell>
+                    <mat-cell *matCellDef="let user"> {{user.weight}} </mat-cell>
+                </ng-container>
+                <ng-container matColumnDef="bodyFatPercentage">
+                    <mat-header-cell *matHeaderCellDef> Body Fat % </mat-header-cell>
+                    <mat-cell *matCellDef="let user"> {{user.bodyFatPercentage}}% </mat-cell>
+                </ng-container>
+                <ng-container matColumnDef="delete">
+                    <mat-header-cell *matHeaderCellDef>
+                        <mat-icon style="margin-left: 13px;">delete</mat-icon>
+                    </mat-header-cell>
+                    <mat-cell *matCellDef="let user">
+                        <button style="margin-left: 5px;" mat-mini-fab (click)="remoteEntry(user.id)">
+                            <mat-icon>delete</mat-icon>
+                        </button>
+                    </mat-cell>
+                </ng-container>
+                <mat-row *matHeaderRowDef="columnsToDisplay"></mat-row>
+                <mat-row *matRowDef="let myRowData; columns: columnsToDisplay"></mat-row>
+        </mat-table>
+    </mat-card-content>
+    <mat-card-footer style="display: flex;flex-flow: row; justify-content: flex-end;">
+        <button style="margin: 5px;" mat-mini-fab routerLink="/personal-info/add">
+            <mat-icon>add</mat-icon>
+        </button>
+    </mat-card-footer>
+</mat-card>

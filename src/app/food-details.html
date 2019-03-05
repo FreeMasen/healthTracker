@@ -1,0 +1,31 @@
+<div *ngIf="food">
+    <mat-card-title>
+        {{food.foodDesc.desc}}
+    </mat-card-title>
+    <mat-card-subtitle *ngIf="food.manufacturer && food.manufacturer.length > 0">
+        {{food.foodDesc.manufacturer}}
+    </mat-card-subtitle>
+    <form [formGroup]="inputForm">
+        <mat-form-field style="margin-right: 5px;">
+            <mat-label>Measurement</mat-label>
+            <input matInput formControlName="measurement" />
+        </mat-form-field>
+        <mat-form-field style="margin-right: 5px;">
+            <mat-label>Unit</mat-label>
+            <mat-select [value]="selectedWeightId">
+                <mat-option *ngFor="let opt of measurementOptions" [value]="opt.id">{{opt.measurementDesc}}</mat-option>
+            </mat-select>
+        </mat-form-field>
+    </form>
+    <mat-tree #nutritionTree [dataSource]="dataSource" [treeControl]="tree">
+        <mat-tree-node *matTreeNodeDef="let node" matTreeNodePadding>
+            <button *ngIf="node.children.length > 0" mat-icon-button matTreeNodeToggle [attr.aria-label]="'toggle ' + node.name">
+                <mat-icon class="mat-icon-rtl-mirror">
+                    {{tree.isExpanded(node) ? 'expand_more' : 'chevron_right'}}
+                </mat-icon>
+            </button>
+            <span style="margin-right: 5px">{{node.value}}</span>
+        </mat-tree-node>
+    </mat-tree>
+</div>
+<mat-spinner *ngIf="!food"></mat-spinner>
