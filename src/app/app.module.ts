@@ -14,7 +14,7 @@ import { DashboardComponent } from './dashboard.component';
 import { FoodDetails } from './food-details.component';
 import { PersonalInfoComponent } from './personal-info.component';
 import { AddMealComponent } from './add-meal.component';
-
+import { AboutComponent } from './about.component';
 @NgModule({
     declarations: [
         MessageComponent,
@@ -27,6 +27,7 @@ import { AddMealComponent } from './add-meal.component';
         FoodDetails,
         PersonalInfoComponent,
         AddMealComponent,
+        AboutComponent,
     ],
     imports: [
         BrowserModule,

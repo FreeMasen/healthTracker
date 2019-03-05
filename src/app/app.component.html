@@ -1,4 +1,4 @@
-<mat-toolbar class="header" color="primary">
+<mat-toolbar class="header" color="primary" style="display: flex;flex-flow:row;justify-content:space-between;">
   <!-- <mat-menu #appMenu="matMenu">
     <button mat-menu-item routerLink="/dashboard">
       <mat-icon>dashboard</mat-icon>
@@ -20,7 +20,8 @@
   <button mat-icon-button [matMenuTriggerFor]="appMenu">
     <mat-icon>menu</mat-icon>
   </button> -->
-  <h1>Health Data Tracker</h1>
+  <h1 routerLink="./" style="cursor:pointer;" title="Dashboard">Health Data Tracker</h1>
+  <h1 routerLink="./about" style="cursor:pointer;">About</h1>
 </mat-toolbar>
 <main class="body">
   <message-toast></message-toast>

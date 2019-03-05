@@ -6,6 +6,7 @@ import { DashboardComponent } from './dashboard.component';
 import { FoodDetails } from './food-details.component';
 import { PersonalInfoComponent } from './personal-info.component';
 import { AddMealComponent } from './add-meal.component';
+import { AboutComponent } from './about.component';
 const routes: Routes = [
   {path: '', component: DashboardComponent },
   {path: 'search', component: SearchComponent},
@@ -13,6 +14,7 @@ const routes: Routes = [
   {path: 'food/:id', component: FoodDetails},
   {path: 'personal-info/add', component: PersonalInfoComponent},
   {path: 'meal/add', component: AddMealComponent},
+  {path: 'about', component: AboutComponent},
   {path: '**', redirectTo: ''},
 ];
 
