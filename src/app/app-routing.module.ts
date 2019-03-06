@@ -7,6 +7,7 @@ import { FoodDetails } from './food-details.component';
 import { PersonalInfoComponent } from './personal-info.component';
 import { AddMealComponent } from './add-meal.component';
 import { AboutComponent } from './about.component';
+import { ImportComponent } from './import.component';
 const routes: Routes = [
   {path: '', component: DashboardComponent },
   {path: 'search', component: SearchComponent},
@@ -15,6 +16,7 @@ const routes: Routes = [
   {path: 'personal-info/add', component: PersonalInfoComponent},
   {path: 'meal/add', component: AddMealComponent},
   {path: 'about', component: AboutComponent},
+  {path: 'import', component: ImportComponent},
   {path: '**', redirectTo: ''},
 ];
 

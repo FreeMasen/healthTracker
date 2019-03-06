@@ -1,0 +1,13 @@
+<mat-card-title>Import History</mat-card-title>
+<form>
+    <div class="file-import">
+        <label for="file-import">Select File</label>
+        <input accept="application/json" 
+                name="importFile" 
+                type="file" 
+                id="file-import"
+                (change)="fileSelected()"
+                #importFile
+        />
+    </div>
+</form>

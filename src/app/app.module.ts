@@ -15,6 +15,7 @@ import { FoodDetails } from './food-details.component';
 import { PersonalInfoComponent } from './personal-info.component';
 import { AddMealComponent } from './add-meal.component';
 import { AboutComponent } from './about.component';
+import { ImportComponent } from './import.component';
 @NgModule({
     declarations: [
         MessageComponent,
@@ -28,6 +29,7 @@ import { AboutComponent } from './about.component';
         PersonalInfoComponent,
         AddMealComponent,
         AboutComponent,
+        ImportComponent,
     ],
     imports: [
         BrowserModule,
