@@ -12,17 +12,12 @@ export const JOULES_ID = 268;
 
 export interface IFoodDesc {
     id: number;
-    foodGroupId: number;
     desc: string;
-    shortDesc: string;
-    commonName?: string;
     manufacturer?: string;
-    refuseDesc?: string;
-    refuseWeight: number;
-    nitroToProFact: number;
-    calFromProFact: number;
-    calFromFatFact: number;
-    calFromCarFact: number;
+    calories: number;
+    carbs: number;
+    fat: number;
+    protein: number;
 }
 
 export interface IFoodGroup {
@@ -253,9 +248,6 @@ export class MealItem {
 
 export class Database extends Dexie {
     public foods: Dexie.Table<IFoodDesc, number>;
-    public foodGroups: Dexie.Table<IFoodGroup, number>;
-    public nutrition: Dexie.Table<INutritionData, number>;
-    public nutritionDefs: Dexie.Table<INutritionDefinition, number>;
     public weights: Dexie.Table<IWeightInfo, number>;
     public seeds: Dexie.Table<{id?: number, when: string, state: string}, number>;
     public users: Dexie.Table<IUser, number>;
@@ -265,10 +257,7 @@ export class Database extends Dexie {
     constructor() {
         super('nutrition-data');
         this.version(1).stores({
-            foods: '++id,desc,shortDesc,commonName,manufacturer',
-            foodGroups: '++id,desc',
-            nutrition: 'id,nutId,foodDesId',
-            nutritionDefs: '++nutId,tagName,desc',
+            foods: '++id,desc,manufacturer',
             weights: 'id,foodDescId,measurementDesc',
             seeds: '++id,when,state',
             users: '++id,updated',
@@ -317,7 +306,7 @@ export class Database extends Dexie {
      * Get the last 50 user history entries
      */
     async getUserHistory(): Promise<IUser[]> {
-        return (await this.users.orderBy('id').reverse().limit(50).toArray()).map(u => {
+        return (await this.users.orderBy('updated').reverse().limit(50).toArray()).map(u => {
             if (u.updated) {
                 u.updated = moment(u.updated);
             }
@@ -375,21 +364,23 @@ export class Database extends Dexie {
     }
 
     async addMeal(date: moment.Moment, name: string, contents: MealItem[]) {
+        console.log('Data.addMeal', date.toLocaleString(), name, contents.map(i => i.name).join(','));
+        let dayDate = date.clone().startOf('day');
         let day: IDay;
         try {
-            day = await this.days.where('date').equals(date.format(DAY_FORMAT)).first();
+            day = await this.days.where('date').equals(+dayDate).first();
         } catch (e) {
-            console.error('Failed to get day from date', date.format(DAY_FORMAT))
+            console.error('Failed to get day from date', dayDate.format(DAY_FORMAT))
         }
         let dayId: number;
         if (!day) {
             try {
                 dayId = await this.days.put({
-                    date: +date,
+                    date: +dayDate,
                 })
 
             } catch (e) {
-                return console.error('Failed to insert non-existent day', date.format(DAY_FORMAT));
+                return console.error('Failed to insert non-existent day', dayDate.format(DAY_FORMAT));
             }
         } else {
             dayId = day.id;
@@ -398,6 +389,7 @@ export class Database extends Dexie {
             hours: date.hours(),
             minutes: date.minutes(),
         }
+        console.log('time', time, date.toLocaleString());
         let mealId: number;
         let iMeal = {
             dayId,
@@ -422,67 +414,19 @@ export class Database extends Dexie {
      * Find a food by name
      * @param term The name to search
      */
-    async findFood(term: string): Promise<IFoodDesc[]> {
-        return await this.foods.where('desc')
+    async findFood(term: string): Promise<MealItem[]> {
+        let foods = await this.mealItems
+                        .where('name')
                         .startsWithIgnoreCase(term)
-                        .or('shortDesc')
-                        .startsWithIgnoreCase(term)
-                        .or('commonName')
-                        .startsWithIgnoreCase(term)
-                        .or('manufacturer')
-                        .startsWithIgnoreCase(term)
-                        .toArray()
+                        .sortBy('name');
+        return foods.map(f => new MealItem(f.name, f.calories, f.carbs, f.protein, f.fat, null, f.id))
     }
     /**
      * Get the details for a food from the search
      * @param foodDesId The ID of the food details to get
      */
-    async foodDetails(foodDesId: number): Promise<IFoodDetail> {
-        let foodDesc = await this.foods.get(foodDesId);
-        let nuts: INutritionData[]  = await this.nutrition.where('foodDesId').equals(foodDesId).toArray();
-        let nutrients: INutrient[] = new Array(nuts.length - 5);
-        let energy: IEnergy = {
-            calories: 0,
-            carbs: {
-                grams: 0,
-                sugars: {
-                    data: {nutId: SUGAR_ID, val: 0, addModDate: moment(), foodDesId, id: -1, refFoodId: -1},
-                    def: {desc: 'Sugar', nutId: SUGAR_ID, units: 'g', numDec: -1,srOrder: -1,tagName: 'SUGAR'},
-                },
-            },
-            fat: null,
-            joules: 0,
-            protein: null
-        };
-        for (let i = 0; i < nuts.length; i++) {
-            let data = nuts[i];
-            let def = await this.nutritionDefs.get(data.nutId);
-            if (!data || !def) continue;
-            if (def.nutId === ENERGY_ID) {
-                energy.calories = data.val;
-            } else if (def.nutId === CARBS_ID) {
-                energy.carbs.grams = data.val;
-            } else if (def.nutId === FAT_ID) {
-                energy.fat = {data, def};
-            } else if (def.nutId === PROTEIN_ID) {
-                energy.protein = {data, def};
-            } else if (def.nutId === JOULES_ID) {
-                energy.joules = data.val;
-            }
-            nutrients[i] = {
-                data,
-                def,
-            }
-        }
-        nutrients = nutrients.filter(n => n.data && n.def);
-        
-        let weights = await this.weights.where('foodDescId').equals(foodDesId).toArray();
-        return {
-            foodDesc,
-            nutrients,
-            weights,
-            energy,
-        }
+    async foodDetails(foodDesId: number): Promise<IFoodDesc> {
+        return await this.foods.get(foodDesId);
     }
 
     async seed(updateCb: (event: string, tableName: string, target: number, updatedValue: number) => void): Promise<void> {
@@ -491,10 +435,7 @@ export class Database extends Dexie {
                 this.seeds.clear();
             }
             await this.seeds.add({when: moment().toISOString(), state: 'start'})
-            await this.seedTable(this.foods, 'food_desc.json', updateCb);
-            await this.seedTable(this.foodGroups, 'food_groups.json', updateCb);    
-            await this.seedTable(this.nutrition, 'nut_data.json', updateCb);
-            await this.seedTable(this.nutritionDefs, 'nutr_def.json', updateCb);
+            await this.seedTable(this.foods, 'food_details.json', updateCb);
             await this.seedTable(this.weights, 'weight.json', updateCb);
             await this.seeds.add({when: moment().toISOString(), state: 'complete'});
             

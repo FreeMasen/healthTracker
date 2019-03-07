@@ -1,7 +1,7 @@
 import { Component, Input, ViewChild } from '@angular/core';
 import {FlatTreeControl} from '@angular/cdk/tree';
 import {MatTreeFlatDataSource, MatTreeFlattener, MatTree} from '@angular/material/tree';
-import { Data, IFoodDetail, INutrient, IWeightInfo } from './services/data';
+import { Data, IFoodDetail, INutrient, IWeightInfo, IFoodDesc } from './services/data';
 import { FormBuilder, FormGroup } from '@angular/forms';
 
 interface INutritionNode {
@@ -16,7 +16,7 @@ interface INutritionNode {
     styleUrls: ['./food-details.scss'],
 })
 export class FoodDetails {
-    food: IFoodDetail;
+    food: IFoodDesc;
     flatTransForm = (node: INutritionNode) => {
         return node;
     };
@@ -53,7 +53,7 @@ export class FoodDetails {
     }
 
     async setup() {
-        if (this.food && this.food.foodDesc.id === this.foodId) return;
+        if (this.food && this.food.id === this.foodId) return;
         let food = await this.data.foodDetails(this.foodId)
         this.inputForm = this.builder.group({
             measurement: 100,
@@ -61,11 +61,8 @@ export class FoodDetails {
         });
         this.food = food;
         let info = this.nutritionInfo();
-        let weights = this.food.weights;
-        if (weights.findIndex(w => w.measurementDesc === 'grams') < 0) {
-            this.measurementOptions.unshift({measurementDesc: 'grams', amount: 100, grams: 100, foodDescId: this.foodId, seq: -1});
-        }
-        this.measurementOptions = this.food.weights;
+        let weights: IWeightInfo[] = await this.data.weights.where('foodDesId').equals(this.foodId).toArray();
+        this.measurementOptions = [{measurementDesc: 'grams', amount: 100, grams: 100, foodDescId: this.foodId, seq: -1}].concat(weights)
         setTimeout(() => this.dataSource.data = info, 10)
     }
 
@@ -75,36 +72,25 @@ export class FoodDetails {
         }
         return [
             {
-                value: `Calories: ${this.food.energy.calories}`,
+                value: `Calories: ${this.food.calories}`,
                 level: 1,
                 expandable: true,
                 children: [{
-                    value: `Carbs: ${this.food.energy.carbs.grams} g`,
+                    value: `Carbs: ${this.food.carbs} g`,
                     level: 2,
                     expandable: true,
-                    children: [{
-                        value: `Sugars: ${this.food.energy.carbs.sugars.data.val} ${this.food.energy.carbs.sugars.def.units}`,
-                        level: 3,
-                        expandable: false,
-                        children: [],
-                    }]
+                    children: []
                 }, {
-                    value: `Fat: ${this.food.energy.fat.data.val} ${this.food.energy.fat.def.units}`,
+                    value: `Fat: ${this.food.fat} g`,
                     level: 2,
                     expandable: false,
                     children: []
                 }, {
-                    value: `Protein: ${this.food.energy.protein.data.val} ${this.food.energy.protein.def.units}`,
+                    value: `Protein: ${this.food.protein} g`,
                     level: 2,
                     expandable: false,
                     children: []
                 }],
-            },
-            {
-                value: 'Additional Info',
-                level: 1,
-                expandable: true,
-                children: this.food.nutrients.map(n => ({value: `${n.data.val} ${n.def.units}`, level: 2, expandable: false, children: []}))
             }
         ];
     }

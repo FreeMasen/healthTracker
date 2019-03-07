@@ -1,10 +1,13 @@
 import { Component, ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup } from '@angular/forms';
-import { MealName, MealItem, Data } from './services/data';
+import { MealName, MealItem, Data, IFoodDesc } from './services/data';
 import { MatStepper } from '@angular/material/stepper';
 import * as moment from 'moment';
 import { Router } from '@angular/router';
 import { timeToTime } from './services/util';
+import { Observable } from 'rxjs';
+import { map, startWith, debounceTime, switchMap, } from 'rxjs/operators';
+import { MatAutocomplete } from '@angular/material';
 
 @Component({
     selector: 'add-meal',
@@ -21,6 +24,9 @@ export class AddMealComponent {
     stepper: MatStepper;
     columnsToDisplay = ['name', 'calories', 'carbs', 'fat', 'protein', 'delete'];
     confirmColumns = ['name', 'calories', 'carbs', 'fat', 'protein'];
+    recommendedFoods: Observable<MealItem[]>;
+    @ViewChild(MatAutocomplete)
+    autoComplete: MatAutocomplete;
     constructor(
         private builder: FormBuilder,
         private data: Data,
@@ -33,12 +39,12 @@ export class AddMealComponent {
             name: MealName.Breakfast,
         });
         this.basicInfo.valueChanges.subscribe(change => {
-            console.log('basicInfo.valueChanges', change);
             this.mealName = change.name;
-            this.mealDate = change.date;
+            let mealDate = change.date;
             let time = timeToTime(change.time);
-            this.mealDate.hours(time.hours);
-            this.mealDate.minutes(time.minutes);
+            mealDate.hours(time.hours);
+            mealDate.minutes(time.minutes);
+            this.mealDate = mealDate;
         });
         this.addFood = this.builder.group({
             desc: '',
@@ -47,6 +53,30 @@ export class AddMealComponent {
             fat: null,
             protein: null,
         });
+        let desc = this.addFood.get('desc');
+        this.recommendedFoods = desc.valueChanges.pipe(
+            debounceTime(300),
+            switchMap((v, i) => this.getRecommendations(v))
+        )
+        this.autoComplete.optionSelected.subscribe(value => {
+            this.data.mealItems.get(value.option.value).then(food => {
+                this.addFood.setValue({
+                    desc: `${food.name}`,
+                    calories: food.calories,
+                    carbs: food.carbs,
+                    fat: food.fat,
+                    protein: food.protein,
+                }, {emitEvent: false, onlySelf: true});
+            });
+        });
+    }
+
+    async getRecommendations(v: string) {
+        if (typeof v !== 'string') {
+            return [];
+        }
+        let result = await this.data.findFood(v);
+        return result;
     }
 
     addMealItem() {

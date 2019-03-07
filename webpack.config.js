@@ -2,9 +2,12 @@ const path = require('path');
 
 module.exports = function config(env) {
     let opts = {
-        entry: path.join(__dirname, 'worker.ts'),
+        entry: {
+            worker: path.join(__dirname, 'worker.ts'),
+            serviceWorker: path.join(__dirname, 'serviceWorker.ts'),
+        },
         output: {
-            filename: 'worker.js',
+            filename: '[name].js',
             path: path.join(__dirname, 'src','assets'),
         },
         resolve: {

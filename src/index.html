@@ -10,5 +10,14 @@
 </head>
 <body>
   <app-root></app-root>
+  <script>
+    if ('serviceWorker' in navigator && location.protocol === 'https') {
+      navigator.serviceWorker.register('/healthTracker/assets/serviceWorker.js')
+          .then(() => console.log('successfully registered service worker'))
+          .catch(e => {
+              console.error('error registering service worker', e);
+          });
+  }
+  </script>
 </body>
 </html>

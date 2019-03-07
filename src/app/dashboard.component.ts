@@ -52,12 +52,11 @@ export class DashboardComponent {
 
     canGoForward(): boolean {
         let diff = Math.abs(this.today.date.diff(moment(), 'days'));
-        console.log('canGoForward', diff);
         return Math.floor(diff) < 1;
     }
 
     currentDate(): string {
-        if (!this.canGoForward()) {
+        if (this.today.date.isSame(moment().startOf('day'))) {
             return 'Today';
         }
         return this.today.date.format('ddd MMM Do, YYYY');

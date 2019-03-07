@@ -1,6 +1,6 @@
 import { Component, Output, EventEmitter } from '@angular/core';
 import { FormControl } from '@angular/forms';
-import { Data, IFoodDesc } from './services/data';
+import { Data, IFoodDesc, MealItem } from './services/data';
 import { Messenger } from './services/messenger';
 
 @Component({
@@ -10,7 +10,7 @@ import { Messenger } from './services/messenger';
 })
 export class SearchComponent {
     term = new FormControl('');
-    public foods: IFoodDesc[] = [];
+    public foods: MealItem[] = [];
     private debounce;
     @Output() onFoodClicked = new EventEmitter<number>()
     constructor(public data: Data, private messenger: Messenger) {

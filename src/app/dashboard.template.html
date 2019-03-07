@@ -70,7 +70,7 @@
 <mat-card style="margin-top: 5px;">
     <mat-card-title>Body History</mat-card-title>
     <mat-card-content style="width: 100%;">
-        <mat-table style="width: 100%;" [dataSource]="history">
+        <mat-table style="width: 100%;max-height:500px;overflow-y:scroll;" [dataSource]="history">
                 <ng-container matColumnDef="updated">
                     <mat-header-cell *matHeaderCellDef> Date </mat-header-cell>
                     <mat-cell *matCellDef="let user"> {{user.updated.format('MMM DD, YYYY')}} </mat-cell>

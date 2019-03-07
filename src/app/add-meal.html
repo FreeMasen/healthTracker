@@ -26,8 +26,17 @@
         <form [formGroup]="addFood">
             <mat-form-field style="margin-right: 5px;">
                 <mat-label>Description</mat-label>
-                <input matInput formControlName="desc" />
+                <input matInput 
+                    formControlName="desc" 
+                    [matAutocomplete]="auto"
+                    [matAutocompleteConnectedTo]="origin"
+                />
             </mat-form-field>
+            <mat-autocomplete #autoComplete #auto="matAutocomplete" panelWidth="400px">
+                <mat-option *ngFor="let food of recommendedFoods | async" [value]="food.id">
+                    {{food.name}}
+                </mat-option>
+            </mat-autocomplete>
             <mat-form-field style="margin-right: 5px; width: 75px;">
                 <mat-label>Calories</mat-label>
                 <input matInput formControlName="calories" type="number" min="0" />
@@ -66,7 +75,7 @@
                 <mat-cell *matCellDef="let mealItem"> {{mealItem.fat}} </mat-cell>
             </ng-container>
             <ng-container matColumnDef="protein">
-                <mat-header-cell *matHeaderCellDef> Fat </mat-header-cell>
+                <mat-header-cell *matHeaderCellDef> Protein </mat-header-cell>
                 <mat-cell *matCellDef="let mealItem"> {{mealItem.protein}} </mat-cell>
             </ng-container>
             <ng-container matColumnDef="delete">

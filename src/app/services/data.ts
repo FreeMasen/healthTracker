@@ -24,9 +24,6 @@ export class Data extends Database {
     seedTableNames() {
         return [
             'foods',
-            'foodGroups',
-            'nutrition',
-            'nutritionDefs',
             'weights',
         ];
     }

@@ -19993,6 +19993,8 @@ webpackContext.id = "./node_modules/moment/locale sync recursive ^\\.\\/.*$";
         for (i = 0; i < tokens.length; i++) {
             token = tokens[i];
             parsedInput = (string.match(getParseRegexForToken(token, config)) || [])[0];
+            // console.log('token', token, 'parsedInput', parsedInput,
+            //         'regex', getParseRegexForToken(token, config));
             if (parsedInput) {
                 skipped = string.substr(0, string.indexOf(parsedInput));
                 if (skipped.length > 0) {
@@ -22924,12 +22926,23 @@ module.exports = function(module) {
 /*!**************************************!*\
   !*** ./src/app/services/database.ts ***!
   \**************************************/
-/*! exports provided: ActivityLevel, Database */
+/*! exports provided: ENERGY_ID, CARBS_ID, SUGAR_ID, FIBER_ID, PROTEIN_ID, FAT_ID, JOULES_ID, ActivityLevel, MealName, Day, Meal, MealItem, Database */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ENERGY_ID", function() { return ENERGY_ID; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "CARBS_ID", function() { return CARBS_ID; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "SUGAR_ID", function() { return SUGAR_ID; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "FIBER_ID", function() { return FIBER_ID; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "PROTEIN_ID", function() { return PROTEIN_ID; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "FAT_ID", function() { return FAT_ID; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "JOULES_ID", function() { return JOULES_ID; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ActivityLevel", function() { return ActivityLevel; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "MealName", function() { return MealName; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Day", function() { return Day; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Meal", function() { return Meal; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "MealItem", function() { return MealItem; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Database", function() { return Database; });
 /* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! tslib */ "./node_modules/tslib/tslib.es6.js");
 /* harmony import */ var dexie__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! dexie */ "./node_modules/dexie/dist/dexie.es.js");
@@ -22938,30 +22951,145 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
+var DAY_FORMAT = 'YYYY/MM/DD';
+var ENERGY_ID = 208;
+var CARBS_ID = 205;
+var SUGAR_ID = 269;
+var FIBER_ID = 291;
+var PROTEIN_ID = 203;
+var FAT_ID = 204;
+var JOULES_ID = 268;
 var ActivityLevel;
 (function (ActivityLevel) {
     ActivityLevel["Active"] = "Active";
     ActivityLevel["SomewhatActive"] = "Somewhat Active";
     ActivityLevel["Sedentary"] = "Sedentary";
 })(ActivityLevel || (ActivityLevel = {}));
+var MealName;
+(function (MealName) {
+    MealName["Breakfast"] = "Breakfast";
+    MealName["Lunch"] = "Lunch";
+    MealName["Dinner"] = "Dinner";
+    MealName["Tea"] = "Tea";
+    MealName["Snack"] = "Snack";
+})(MealName || (MealName = {}));
+var Day = /** @class */ (function () {
+    function Day(date, meals, id) {
+        this.meals = meals;
+        this.id = id;
+        if (typeof date === 'number') {
+            this.date = moment__WEBPACK_IMPORTED_MODULE_2__(date);
+        }
+        else {
+            this.date = date;
+        }
+    }
+    Day.prototype.calories = function () {
+        return this.meals.reduce(function (acc, meal) { return acc + meal.calories(); }, 0);
+    };
+    Day.prototype.carbs = function () {
+        return this.meals.reduce(function (a, m) { return a + m.carbs(); }, 0);
+    };
+    Day.prototype.fat = function () {
+        return this.meals.reduce(function (a, m) { return a + m.fat(); }, 0);
+    };
+    Day.prototype.protein = function () {
+        return this.meals.reduce(function (a, m) { return a + m.protein(); }, 0);
+    };
+    Day.prototype.forDb = function () {
+        var ret = {
+            date: +this.date
+        };
+        if (this.id) {
+            ret.id = this.id;
+        }
+        ;
+        return ret;
+    };
+    return Day;
+}());
+
+var Meal = /** @class */ (function () {
+    function Meal(name, time, contents, dayId, id) {
+        this.name = name;
+        this.time = time;
+        this.contents = contents;
+        this.dayId = dayId;
+        this.id = id;
+    }
+    Meal.prototype.calories = function () {
+        return this.contents.reduce(function (a, c) { return a + c.calories; }, 0);
+    };
+    Meal.prototype.carbs = function () {
+        return this.contents.reduce(function (a, c) { return a + c.carbs || 0; }, 0);
+    };
+    Meal.prototype.fat = function () {
+        return this.contents.reduce(function (a, c) { return a + c.fat || 0; }, 0);
+    };
+    Meal.prototype.protein = function () {
+        return this.contents.reduce(function (a, c) { return a + c.protein || 0; }, 0);
+    };
+    Meal.prototype.formattedTime = function () {
+        var hours;
+        var suffix;
+        if (this.time.hours > 12) {
+            hours = this.time.hours - 12;
+            suffix = 'p';
+        }
+        else {
+            hours = this.time.hours;
+            suffix = 'a';
+        }
+        var minutes = ("0" + this.time.minutes).substr(-2);
+        return hours + ":" + minutes + " " + suffix;
+    };
+    Meal.prototype.forDb = function () {
+        var ret = {
+            name: this.name,
+            time: this.time,
+            dayId: this.dayId,
+        };
+        if (this.id) {
+            ret.id = this.id;
+        }
+        return ret;
+    };
+    return Meal;
+}());
+
+var MealItem = /** @class */ (function () {
+    function MealItem(name, calories, carbs, protein, fat, mealId, id) {
+        this.name = name;
+        this.calories = calories;
+        this.carbs = carbs;
+        this.protein = protein;
+        this.fat = fat;
+        this.mealId = mealId;
+        if (id) {
+            this.id = id;
+        }
+    }
+    return MealItem;
+}());
+
 var Database = /** @class */ (function (_super) {
     tslib__WEBPACK_IMPORTED_MODULE_0__["__extends"](Database, _super);
     function Database() {
         var _this = _super.call(this, 'nutrition-data') || this;
         _this.version(1).stores({
-            foods: '++id,desc,shortDesc,commonName,manufacturer',
-            foodGroups: '++id,desc',
-            nutrition: 'id,nutId,foodDesId',
-            nutritionDefs: '++nutId,tagName,desc',
+            foods: '++id,desc,manufacturer',
             weights: 'id,foodDescId,measurementDesc',
             seeds: '++id,when,state',
-            users: '++id',
-            days: '++id',
-            meals: '++id,dayId,name',
-            consumed: '++id,mealId,foodId',
+            users: '++id,updated',
+            days: '++id,date',
+            meals: '++id,dayId,name,time',
+            mealItems: '++id,name,mealId',
         });
         return _this;
     }
+    /**
+     * Check if this database instance has been seeded
+     */
     Database.prototype.hasBeenSeeded = function () {
         return tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"](this, void 0, void 0, function () {
             return tslib__WEBPACK_IMPORTED_MODULE_0__["__generator"](this, function (_a) {
@@ -22972,6 +23100,9 @@ var Database = /** @class */ (function (_super) {
             });
         });
     };
+    /**
+     * Check if the database is ready to be searched
+     */
     Database.prototype.isReady = function () {
         return tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"](this, void 0, void 0, function () {
             var lastUpdate;
@@ -22985,7 +23116,11 @@ var Database = /** @class */ (function (_super) {
             });
         });
     };
-    Database.prototype.addUserInfo = function (info) {
+    /**
+     * Add a new user to the database
+     * @param user The user information to add
+     */
+    Database.prototype.addUser = function (info) {
         return tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"](this, void 0, void 0, function () {
             return tslib__WEBPACK_IMPORTED_MODULE_0__["__generator"](this, function (_a) {
                 switch (_a.label) {
@@ -22994,10 +23129,10 @@ var Database = /** @class */ (function (_super) {
                             delete info.id;
                         }
                         if (!info.updated) {
-                            info.updated = moment__WEBPACK_IMPORTED_MODULE_2__().toISOString();
+                            info.updated = +moment__WEBPACK_IMPORTED_MODULE_2__(); //unix ms timestamp
                         }
-                        if (typeof info.updated != 'string') {
-                            info.updated = info.updated.toISOString();
+                        if (typeof info.updated != 'number') {
+                            info.updated = +info.updated; //unix ms timestamp
                         }
                         return [4 /*yield*/, this.users.put(info)];
                     case 1:
@@ -23007,6 +23142,9 @@ var Database = /** @class */ (function (_super) {
             });
         });
     };
+    /**
+     * Get the last entry for the user's history
+     */
     Database.prototype.getLatestUser = function () {
         return tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"](this, void 0, void 0, function () {
             return tslib__WEBPACK_IMPORTED_MODULE_0__["__generator"](this, function (_a) {
@@ -23017,6 +23155,9 @@ var Database = /** @class */ (function (_super) {
             });
         });
     };
+    /**
+     * Get the last 50 user history entries
+     */
     Database.prototype.getUserHistory = function () {
         return tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"](this, void 0, void 0, function () {
             return tslib__WEBPACK_IMPORTED_MODULE_0__["__generator"](this, function (_a) {
@@ -23032,73 +23173,224 @@ var Database = /** @class */ (function (_super) {
             });
         });
     };
-    Database.prototype.findFood = function (term) {
+    /**
+     * Remove a single history entry
+     * @param id The ID of the entry to be removed
+     */
+    Database.prototype.removeUserEntry = function (id) {
         return tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"](this, void 0, void 0, function () {
             return tslib__WEBPACK_IMPORTED_MODULE_0__["__generator"](this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.foods.where('desc')
-                            .startsWithIgnoreCase(term)
-                            .or('shortDesc')
-                            .startsWithIgnoreCase(term)
-                            .or('commonName')
-                            .startsWithIgnoreCase(term)
-                            .or('manufacturer')
-                            .startsWithIgnoreCase(term)
-                            .toArray()];
-                    case 1: return [2 /*return*/, _a.sent()];
+                    case 0: return [4 /*yield*/, this.users.delete(id)];
+                    case 1:
+                        _a.sent();
+                        return [2 /*return*/];
                 }
             });
         });
     };
+    Database.prototype.removeMeal = function (id) {
+        return tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"](this, void 0, void 0, function () {
+            return tslib__WEBPACK_IMPORTED_MODULE_0__["__generator"](this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.meals.delete(id)];
+                    case 1:
+                        _a.sent();
+                        return [4 /*yield*/, this.mealItems.where('mealId').equals(id).delete()];
+                    case 2:
+                        _a.sent();
+                        return [2 /*return*/];
+                }
+            });
+        });
+    };
+    /**
+     * Get today's consumed information
+     */
+    Database.prototype.getTodaysEntries = function () {
+        return tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"](this, void 0, void 0, function () {
+            return tslib__WEBPACK_IMPORTED_MODULE_0__["__generator"](this, function (_a) {
+                return [2 /*return*/, this.getMealsForDay(moment__WEBPACK_IMPORTED_MODULE_2__())];
+            });
+        });
+    };
+    /**
+     * Get the stored meals for the date
+     * @param day The date to get from the db
+     */
+    Database.prototype.getMealsForDay = function (date) {
+        return tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"](this, void 0, void 0, function () {
+            var dt, day, id;
+            return tslib__WEBPACK_IMPORTED_MODULE_0__["__generator"](this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        dt = +date.startOf('day');
+                        return [4 /*yield*/, this.days.where('date').equals(dt).first()];
+                    case 1:
+                        day = _a.sent();
+                        if (!!day) return [3 /*break*/, 3];
+                        day = {
+                            date: dt,
+                        };
+                        return [4 /*yield*/, this.days.put(day)];
+                    case 2:
+                        id = _a.sent();
+                        return [2 /*return*/, new Day(date, [], id)];
+                    case 3: return [2 /*return*/, this.fillDay(day)];
+                }
+            });
+        });
+    };
+    Database.prototype.fillDay = function (day) {
+        return tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"](this, void 0, void 0, function () {
+            var dbMeals, ret, i, dbMeal, dbContents, contents;
+            return tslib__WEBPACK_IMPORTED_MODULE_0__["__generator"](this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.meals.where('dayId').equals(day.id).toArray()];
+                    case 1:
+                        dbMeals = _a.sent();
+                        ret = new Day(day.date, new Array(dbMeals.length), day.id);
+                        i = 0;
+                        _a.label = 2;
+                    case 2:
+                        if (!(i < dbMeals.length)) return [3 /*break*/, 5];
+                        dbMeal = dbMeals[i];
+                        return [4 /*yield*/, this.mealItems
+                                .where('mealId')
+                                .equals(dbMeal.id)
+                                .toArray()];
+                    case 3:
+                        dbContents = _a.sent();
+                        contents = dbContents.map(function (dbItem) { return new MealItem(dbItem.name, dbItem.calories, dbItem.carbs, dbItem.protein, dbItem.fat, dbItem.mealId, dbItem.id); });
+                        ret.meals[i] = new Meal(dbMeal.name, dbMeal.time, contents, day.id, dbMeal.id);
+                        _a.label = 4;
+                    case 4:
+                        i++;
+                        return [3 /*break*/, 2];
+                    case 5: return [2 /*return*/, ret];
+                }
+            });
+        });
+    };
+    Database.prototype.addMeal = function (date, name, contents) {
+        return tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"](this, void 0, void 0, function () {
+            var day, e_1, dayId, e_2, time, mealId, iMeal, e_3, _i, contents_1, item, e_4;
+            return tslib__WEBPACK_IMPORTED_MODULE_0__["__generator"](this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        _a.trys.push([0, 2, , 3]);
+                        return [4 /*yield*/, this.days.where('date').equals(date.format(DAY_FORMAT)).first()];
+                    case 1:
+                        day = _a.sent();
+                        return [3 /*break*/, 3];
+                    case 2:
+                        e_1 = _a.sent();
+                        console.error('Failed to get day from date', date.format(DAY_FORMAT));
+                        return [3 /*break*/, 3];
+                    case 3:
+                        if (!!day) return [3 /*break*/, 8];
+                        _a.label = 4;
+                    case 4:
+                        _a.trys.push([4, 6, , 7]);
+                        return [4 /*yield*/, this.days.put({
+                                date: +date,
+                            })];
+                    case 5:
+                        dayId = _a.sent();
+                        return [3 /*break*/, 7];
+                    case 6:
+                        e_2 = _a.sent();
+                        return [2 /*return*/, console.error('Failed to insert non-existent day', date.format(DAY_FORMAT))];
+                    case 7: return [3 /*break*/, 9];
+                    case 8:
+                        dayId = day.id;
+                        _a.label = 9;
+                    case 9:
+                        time = {
+                            hours: date.hours(),
+                            minutes: date.minutes(),
+                        };
+                        iMeal = {
+                            dayId: dayId,
+                            name: name,
+                            time: time,
+                        };
+                        _a.label = 10;
+                    case 10:
+                        _a.trys.push([10, 12, , 13]);
+                        return [4 /*yield*/, this.meals.put(iMeal)];
+                    case 11:
+                        mealId = _a.sent();
+                        return [3 /*break*/, 13];
+                    case 12:
+                        e_3 = _a.sent();
+                        return [2 /*return*/, console.error('Failed to insert new meal', iMeal)];
+                    case 13:
+                        _i = 0, contents_1 = contents;
+                        _a.label = 14;
+                    case 14:
+                        if (!(_i < contents_1.length)) return [3 /*break*/, 19];
+                        item = contents_1[_i];
+                        item.mealId = mealId;
+                        _a.label = 15;
+                    case 15:
+                        _a.trys.push([15, 17, , 18]);
+                        return [4 /*yield*/, this.mealItems.put(item)];
+                    case 16:
+                        _a.sent();
+                        return [3 /*break*/, 18];
+                    case 17:
+                        e_4 = _a.sent();
+                        return [2 /*return*/, console.error('failed to insert mealItem', item)];
+                    case 18:
+                        _i++;
+                        return [3 /*break*/, 14];
+                    case 19: return [2 /*return*/];
+                }
+            });
+        });
+    };
+    /**
+     * Find a food by name
+     * @param term The name to search
+     */
+    Database.prototype.findFood = function (term) {
+        return tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"](this, void 0, void 0, function () {
+            var foods;
+            return tslib__WEBPACK_IMPORTED_MODULE_0__["__generator"](this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.mealItems
+                            .where('name')
+                            .startsWithIgnoreCase(term)
+                            .sortBy('name')];
+                    case 1:
+                        foods = _a.sent();
+                        return [2 /*return*/, foods.map(function (f) { return new MealItem(f.name, f.calories, f.carbs, f.protein, f.fat, null, f.id); })];
+                }
+            });
+        });
+    };
+    /**
+     * Get the details for a food from the search
+     * @param foodDesId The ID of the food details to get
+     */
     Database.prototype.foodDetails = function (foodDesId) {
         return tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"](this, void 0, void 0, function () {
-            var foodDesc, nuts, nutrients, i, data, def, weights;
             return tslib__WEBPACK_IMPORTED_MODULE_0__["__generator"](this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.foods.get(foodDesId)];
-                    case 1:
-                        foodDesc = _a.sent();
-                        return [4 /*yield*/, this.nutrition.where('foodDesId').equals(foodDesId).toArray()];
-                    case 2:
-                        nuts = _a.sent();
-                        nutrients = new Array(nuts.length);
-                        i = 0;
-                        _a.label = 3;
-                    case 3:
-                        if (!(i < nuts.length)) return [3 /*break*/, 6];
-                        data = nuts[i];
-                        return [4 /*yield*/, this.nutritionDefs.get(data.nutId)];
-                    case 4:
-                        def = _a.sent();
-                        nutrients[i] = {
-                            data: data,
-                            def: def,
-                        };
-                        _a.label = 5;
-                    case 5:
-                        i++;
-                        return [3 /*break*/, 3];
-                    case 6:
-                        nutrients = nutrients.filter(function (n) { return n.data && n.def; });
-                        return [4 /*yield*/, this.weights.where('foodDescId').equals(foodDesId).toArray()];
-                    case 7:
-                        weights = _a.sent();
-                        return [2 /*return*/, {
-                                foodDesc: foodDesc,
-                                nutrients: nutrients,
-                                weights: weights,
-                            }];
+                    case 1: return [2 /*return*/, _a.sent()];
                 }
             });
         });
     };
     Database.prototype.seed = function (updateCb) {
         return tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"](this, void 0, void 0, function () {
-            var e_1;
+            var e_5;
             return tslib__WEBPACK_IMPORTED_MODULE_0__["__generator"](this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        _a.trys.push([0, 9, , 10]);
+                        _a.trys.push([0, 6, , 7]);
                         return [4 /*yield*/, this.seeds.count()];
                     case 1:
                         if ((_a.sent()) > 0) {
@@ -23107,37 +23399,28 @@ var Database = /** @class */ (function (_super) {
                         return [4 /*yield*/, this.seeds.add({ when: moment__WEBPACK_IMPORTED_MODULE_2__().toISOString(), state: 'start' })];
                     case 2:
                         _a.sent();
-                        return [4 /*yield*/, this.seedTable(this.foods, 'food_desc.json', updateCb)];
+                        return [4 /*yield*/, this.seedTable(this.foods, 'food_details.json', updateCb)];
                     case 3:
                         _a.sent();
-                        return [4 /*yield*/, this.seedTable(this.foodGroups, 'food_groups.json', updateCb)];
+                        return [4 /*yield*/, this.seedTable(this.weights, 'weight.json', updateCb)];
                     case 4:
                         _a.sent();
-                        return [4 /*yield*/, this.seedTable(this.nutrition, 'nut_data.json', updateCb)];
+                        return [4 /*yield*/, this.seeds.add({ when: moment__WEBPACK_IMPORTED_MODULE_2__().toISOString(), state: 'complete' })];
                     case 5:
                         _a.sent();
-                        return [4 /*yield*/, this.seedTable(this.nutritionDefs, 'nutr_def.json', updateCb)];
+                        return [3 /*break*/, 7];
                     case 6:
-                        _a.sent();
-                        return [4 /*yield*/, this.seedTable(this.weights, 'weight.json', updateCb)];
-                    case 7:
-                        _a.sent();
-                        return [4 /*yield*/, this.seeds.add({ when: moment__WEBPACK_IMPORTED_MODULE_2__().toISOString(), state: 'complete' })];
-                    case 8:
-                        _a.sent();
-                        return [3 /*break*/, 10];
-                    case 9:
-                        e_1 = _a.sent();
-                        console.error('Error seeding', e_1);
-                        return [3 /*break*/, 10];
-                    case 10: return [2 /*return*/];
+                        e_5 = _a.sent();
+                        console.error('Error seeding', e_5);
+                        return [3 /*break*/, 7];
+                    case 7: return [2 /*return*/];
                 }
             });
         });
     };
     Database.prototype.seedTable = function (table, route, updateCb) {
         return tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"](this, void 0, void 0, function () {
-            var seedData, e_2, e_3, e_4;
+            var seedData, e_6, e_7, e_8;
             return tslib__WEBPACK_IMPORTED_MODULE_0__["__generator"](this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -23150,12 +23433,11 @@ var Database = /** @class */ (function (_super) {
                         seedData = _a.sent();
                         return [3 /*break*/, 4];
                     case 3:
-                        e_2 = _a.sent();
-                        console.error('Failed to get seed data for', table.name, 'at route', route, e_2);
-                        throw e_2;
+                        e_6 = _a.sent();
+                        console.error('Failed to get seed data for', table.name, 'at route', route, e_6);
+                        throw e_6;
                     case 4:
                         updateCb('clearing', table.name, 100, 0);
-                        console.log(table.name, ': clearing any existing data');
                         _a.label = 5;
                     case 5:
                         _a.trys.push([5, 7, , 8]);
@@ -23164,11 +23446,10 @@ var Database = /** @class */ (function (_super) {
                         _a.sent();
                         return [3 /*break*/, 8];
                     case 7:
-                        e_3 = _a.sent();
-                        console.error('Failed to clear ', table.name, e_3);
-                        throw e_3;
+                        e_7 = _a.sent();
+                        console.error('Failed to clear ', table.name, e_7);
+                        throw e_7;
                     case 8:
-                        console.log(table.name, ': adding data', seedData.length);
                         updateCb('starting-seed', table.name, 100, 0);
                         _a.label = 9;
                     case 9:
@@ -23178,7 +23459,7 @@ var Database = /** @class */ (function (_super) {
                         _a.sent();
                         return [3 /*break*/, 12];
                     case 11:
-                        e_4 = _a.sent();
+                        e_8 = _a.sent();
                         console.error('failed to add data to ', table.name, seedData);
                         return [3 /*break*/, 12];
                     case 12: return [2 /*return*/];
@@ -23188,7 +23469,7 @@ var Database = /** @class */ (function (_super) {
     };
     Database.prototype.batchSeed = function (table, batch, updateCb) {
         return tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"](this, void 0, void 0, function () {
-            var start, len, slice, e_5;
+            var start, len, slice, e_9;
             return tslib__WEBPACK_IMPORTED_MODULE_0__["__generator"](this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -23206,39 +23487,169 @@ var Database = /** @class */ (function (_super) {
                         return [4 /*yield*/, table.bulkAdd(slice)];
                     case 3:
                         _a.sent();
-                        console.log('inserted another batch', start);
                         updateCb('seeding', table.name, batch.length, start);
                         return [3 /*break*/, 5];
                     case 4:
-                        e_5 = _a.sent();
-                        console.error('bailing after error for', table.name, e_5);
+                        e_9 = _a.sent();
+                        console.error('bailing after error for', table.name, e_9);
                         return [3 /*break*/, 6];
                     case 5: return [3 /*break*/, 1];
                     case 6:
                         updateCb('complete', table.name, batch.length, batch.length);
-                        // for (let entry of batch) {
-                        //     try {
-                        //         await table.add(entry).then(k => {
-                        //             ct++;
-                        //         }, e => {
-                        //             throw e;
-                        //         }).catch(e => {
-                        //             errs.push(entry);
-                        //             throw e;
-                        //         });
-                        //         if (ct % 1000 === 0) {
-                        //             console.log('seeded', ct, 'records in', table.name);
-                        //         }
-                        //     } catch (e) {
-                        //         let errRecord = errs[errs.length - 1];
-                        //         console.error('error inserting record', e, errRecord);
-                        //         let info = await table.toArray();
-                        //         console.log('table contents', info);
-                        //         break;
-                        //     }
-                        // }
-                        console.log('completed', table.name, start, batch.length);
                         return [2 /*return*/];
+                }
+            });
+        });
+    };
+    Database.prototype.getAllUserData = function () {
+        return tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"](this, void 0, void 0, function () {
+            var dbDays, mealHistory, i, _a, _b, bodyHistory;
+            return tslib__WEBPACK_IMPORTED_MODULE_0__["__generator"](this, function (_c) {
+                switch (_c.label) {
+                    case 0: return [4 /*yield*/, this.days.toArray()];
+                    case 1:
+                        dbDays = _c.sent();
+                        mealHistory = new Array(dbDays.length);
+                        i = 0;
+                        _c.label = 2;
+                    case 2:
+                        if (!(i < dbDays.length)) return [3 /*break*/, 5];
+                        _a = mealHistory;
+                        _b = i;
+                        return [4 /*yield*/, this.fillDay(dbDays[i])];
+                    case 3:
+                        _a[_b] = _c.sent();
+                        _c.label = 4;
+                    case 4:
+                        i++;
+                        return [3 /*break*/, 2];
+                    case 5: return [4 /*yield*/, this.users.toArray()];
+                    case 6:
+                        bodyHistory = _c.sent();
+                        return [2 /*return*/, {
+                                mealHistory: mealHistory,
+                                bodyHistory: bodyHistory,
+                            }];
+                }
+            });
+        });
+    };
+    Database.prototype.importArchive = function (archive) {
+        return tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"](this, void 0, void 0, function () {
+            var _i, _a, day, date, existingDay, newDayId, _loop_1, this_1, _b, _c, meal, _d, _e, body, updated, existingBody, newBody;
+            return tslib__WEBPACK_IMPORTED_MODULE_0__["__generator"](this, function (_f) {
+                switch (_f.label) {
+                    case 0:
+                        _i = 0, _a = archive.mealHistory;
+                        _f.label = 1;
+                    case 1:
+                        if (!(_i < _a.length)) return [3 /*break*/, 10];
+                        day = _a[_i];
+                        date = typeof day.date === 'number' ? day.date : +day.date;
+                        return [4 /*yield*/, this.days.where('date').equals(date).first()];
+                    case 2:
+                        existingDay = _f.sent();
+                        newDayId = void 0;
+                        if (!existingDay) return [3 /*break*/, 3];
+                        newDayId = existingDay.id;
+                        return [3 /*break*/, 5];
+                    case 3: return [4 /*yield*/, this.days.put({ date: date })];
+                    case 4:
+                        newDayId = _f.sent();
+                        _f.label = 5;
+                    case 5:
+                        _loop_1 = function (meal) {
+                            var existingMeal, newMealId, _loop_2, _i, _a, item;
+                            return tslib__WEBPACK_IMPORTED_MODULE_0__["__generator"](this, function (_b) {
+                                switch (_b.label) {
+                                    case 0: return [4 /*yield*/, this_1.meals.where('dayId').equals(newDayId).and(function (m) { return m.name == meal.name && m.time == meal.time; }).first()];
+                                    case 1:
+                                        existingMeal = _b.sent();
+                                        newMealId = void 0;
+                                        if (!existingMeal) return [3 /*break*/, 2];
+                                        newMealId = existingMeal.id;
+                                        return [3 /*break*/, 4];
+                                    case 2: return [4 /*yield*/, this_1.meals.put({
+                                            dayId: newDayId,
+                                            name: meal.name,
+                                            time: meal.time,
+                                        })];
+                                    case 3:
+                                        newMealId = _b.sent();
+                                        _b.label = 4;
+                                    case 4:
+                                        _loop_2 = function (item) {
+                                            var existingItem, i;
+                                            return tslib__WEBPACK_IMPORTED_MODULE_0__["__generator"](this, function (_a) {
+                                                switch (_a.label) {
+                                                    case 0: return [4 /*yield*/, this_1.mealItems.where('mealId').equals(newMealId).and(function (i) { return i.name == item.name; }).first()];
+                                                    case 1:
+                                                        existingItem = _a.sent();
+                                                        if (!!existingItem) return [3 /*break*/, 3];
+                                                        i = Object.assign({}, item);
+                                                        delete i.id;
+                                                        i.mealId = newMealId;
+                                                        return [4 /*yield*/, this_1.mealItems.put(i)];
+                                                    case 2:
+                                                        _a.sent();
+                                                        _a.label = 3;
+                                                    case 3: return [2 /*return*/];
+                                                }
+                                            });
+                                        };
+                                        _i = 0, _a = meal.contents;
+                                        _b.label = 5;
+                                    case 5:
+                                        if (!(_i < _a.length)) return [3 /*break*/, 8];
+                                        item = _a[_i];
+                                        return [5 /*yield**/, _loop_2(item)];
+                                    case 6:
+                                        _b.sent();
+                                        _b.label = 7;
+                                    case 7:
+                                        _i++;
+                                        return [3 /*break*/, 5];
+                                    case 8: return [2 /*return*/];
+                                }
+                            });
+                        };
+                        this_1 = this;
+                        _b = 0, _c = day.meals;
+                        _f.label = 6;
+                    case 6:
+                        if (!(_b < _c.length)) return [3 /*break*/, 9];
+                        meal = _c[_b];
+                        return [5 /*yield**/, _loop_1(meal)];
+                    case 7:
+                        _f.sent();
+                        _f.label = 8;
+                    case 8:
+                        _b++;
+                        return [3 /*break*/, 6];
+                    case 9:
+                        _i++;
+                        return [3 /*break*/, 1];
+                    case 10:
+                        _d = 0, _e = archive.bodyHistory;
+                        _f.label = 11;
+                    case 11:
+                        if (!(_d < _e.length)) return [3 /*break*/, 15];
+                        body = _e[_d];
+                        updated = typeof body.updated === 'number' ? body.updated : +moment__WEBPACK_IMPORTED_MODULE_2__(body.updated);
+                        return [4 /*yield*/, this.users.where('updated').equals(updated).first()];
+                    case 12:
+                        existingBody = _f.sent();
+                        if (!!existingBody) return [3 /*break*/, 14];
+                        newBody = Object.assign({}, body);
+                        delete newBody.id;
+                        return [4 /*yield*/, this.users.put(newBody)];
+                    case 13:
+                        _f.sent();
+                        _f.label = 14;
+                    case 14:
+                        _d++;
+                        return [3 /*break*/, 11];
+                    case 15: return [2 /*return*/];
                 }
             });
         });
@@ -23260,15 +23671,16 @@ var Database = /** @class */ (function (_super) {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _src_app_services_database__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./src/app/services/database */ "./src/app/services/database.ts");
+/// <reference lib="webworker" />
 
 (function () {
     var db = new _src_app_services_database__WEBPACK_IMPORTED_MODULE_0__["Database"]();
     db.seed(function (event, table, target, value) {
-        postMessage({ event: event, table: table, target: target, value: value }, null);
+        postMessage({ event: event, table: table, target: target, value: value });
     }).then(function () {
-        postMessage({ event: 'all-complete', table: '', target: 100, value: 0 }, null);
+        postMessage({ event: 'all-complete', table: '', target: 100, value: 0 });
     }).catch(function (e) {
-        postMessage({ event: 'error', error: e }, null);
+        postMessage({ event: 'error', error: e });
     });
 })();
 

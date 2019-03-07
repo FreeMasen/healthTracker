@@ -7,7 +7,7 @@ import {
     MatCardModule, MatListModule, MatTreeModule,
     MatSelectModule, MatTableModule, 
     MatStepperModule, MatDatepickerModule,
-    MatProgressSpinnerModule,
+    MatProgressSpinnerModule, MatAutocompleteModule,
 } from '@angular/material';
 import { MatMomentDateModule, } from '@angular/material-moment-adapter';
 
@@ -21,7 +21,7 @@ import { MatMomentDateModule, } from '@angular/material-moment-adapter';
         MatTreeModule, MatSelectModule,
         MatTableModule, MatStepperModule,
         MatDatepickerModule, MatMomentDateModule,
-        MatProgressSpinnerModule,
+        MatProgressSpinnerModule, MatAutocompleteModule,
     ],
     imports: [],
 

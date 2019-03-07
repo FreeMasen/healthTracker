@@ -92,10 +92,11 @@ async function writeFile(file, data) {
     });
 }
 const FILES = [
-    ['src/assets/food_desc.csv', 'id'],
+    // ['src/assets/food_desc.csv', 'id'],
+    ['src/assets/food_details.csv', 'id'],
     ['src/assets/food_groups.csv', 'id'],
-    ['src/assets/nut_data.csv', 'id'],
-    ['src/assets/nutr_def.csv', 'nutId'],
+    // ['src/assets/nut_data.csv', 'id'],
+    // ['src/assets/nutr_def.csv', 'nutId'],
     ['src/assets/weight.csv', 'foodDescId'],
 ]
 async function main() {
