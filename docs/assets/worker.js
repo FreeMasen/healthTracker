@@ -23541,10 +23541,16 @@ var Database = /** @class */ (function (_super) {
     };
     Database.prototype.importArchive = function (archive) {
         return tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"](this, void 0, void 0, function () {
-            var _i, _a, day, date, existingDay, newDayId, _loop_1, this_1, _b, _c, meal, _d, _e, body, updated, existingBody, newBody;
+            var result, _i, _a, day, date, existingDay, newDayId, _loop_1, this_1, _b, _c, meal, _d, _e, body, updated, existingBody, newBody;
             return tslib__WEBPACK_IMPORTED_MODULE_0__["__generator"](this, function (_f) {
                 switch (_f.label) {
                     case 0:
+                        result = {
+                            days: 0,
+                            meals: 0,
+                            items: 0,
+                            body: 0,
+                        };
                         _i = 0, _a = archive.mealHistory;
                         _f.label = 1;
                     case 1:
@@ -23561,6 +23567,7 @@ var Database = /** @class */ (function (_super) {
                     case 3: return [4 /*yield*/, this.days.put({ date: date })];
                     case 4:
                         newDayId = _f.sent();
+                        result.days++;
                         _f.label = 5;
                     case 5:
                         _loop_1 = function (meal) {
@@ -23574,13 +23581,16 @@ var Database = /** @class */ (function (_super) {
                                         if (!existingMeal) return [3 /*break*/, 2];
                                         newMealId = existingMeal.id;
                                         return [3 /*break*/, 4];
-                                    case 2: return [4 /*yield*/, this_1.meals.put({
-                                            dayId: newDayId,
-                                            name: meal.name,
-                                            time: meal.time,
-                                        })];
+                                    case 2:
+                                        result.meals++;
+                                        return [4 /*yield*/, this_1.meals.put({
+                                                dayId: newDayId,
+                                                name: meal.name,
+                                                time: meal.time,
+                                            })];
                                     case 3:
                                         newMealId = _b.sent();
+                                        result.meals++;
                                         _b.label = 4;
                                     case 4:
                                         _loop_2 = function (item) {
@@ -23597,6 +23607,7 @@ var Database = /** @class */ (function (_super) {
                                                         return [4 /*yield*/, this_1.mealItems.put(i)];
                                                     case 2:
                                                         _a.sent();
+                                                        result.items++;
                                                         _a.label = 3;
                                                     case 3: return [2 /*return*/];
                                                 }
@@ -23650,11 +23661,12 @@ var Database = /** @class */ (function (_super) {
                         return [4 /*yield*/, this.users.put(newBody)];
                     case 13:
                         _f.sent();
+                        result.body++;
                         _f.label = 14;
                     case 14:
                         _d++;
                         return [3 /*break*/, 11];
-                    case 15: return [2 /*return*/];
+                    case 15: return [2 /*return*/, result];
                 }
             });
         });
