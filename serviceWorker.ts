@@ -5,8 +5,7 @@
         ev.waitUntil(self.skipWaiting());
     });
     self.addEventListener('activate', ev => {
-        ev.waitUntil(self.caches.keys()
-            .then(() => self.clients.claim()));
+        ev.waitUntil(self.clients.claim());
     })
     self.addEventListener('fetch', ev => {
         ev.respondWith(handleFetch(ev));
