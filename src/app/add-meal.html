@@ -29,14 +29,13 @@
                 <input matInput 
                     formControlName="desc" 
                     [matAutocomplete]="auto"
-                    [matAutocompleteConnectedTo]="autoComplete"
                 />
+                <mat-autocomplete #autoComplete #auto="matAutocomplete" panelWidth="400px">
+                    <mat-option *ngFor="let food of recommendedFoods | async" [value]="food.id">
+                        {{food.name}}
+                    </mat-option>
+                </mat-autocomplete>
             </mat-form-field>
-            <mat-autocomplete #autoComplete #auto="matAutocomplete" panelWidth="400px">
-                <mat-option *ngFor="let food of recommendedFoods | async" [value]="food.id">
-                    {{food.name}}
-                </mat-option>
-            </mat-autocomplete>
             <mat-form-field style="margin-right: 5px; width: 75px;">
                 <mat-label>Calories</mat-label>
                 <input matInput formControlName="calories" type="number" min="0" />
