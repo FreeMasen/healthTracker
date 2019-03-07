@@ -11,7 +11,7 @@
 <body>
   <app-root></app-root>
   <script>
-    if ('serviceWorker' in navigator && location.protocol === 'https') {
+    if ('serviceWorker' in navigator && location.protocol.indexOf('https') > -1) {
       navigator.serviceWorker.register('/healthTracker/assets/serviceWorker.js')
           .then(() => console.log('successfully registered service worker'))
           .catch(e => {
