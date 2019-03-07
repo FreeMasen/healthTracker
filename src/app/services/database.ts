@@ -500,7 +500,13 @@ export class Database extends Dexie {
         }
     }
 
-    async importArchive(archive: IArchive) {        
+    async importArchive(archive: IArchive) {
+        let result = {
+            days: 0,
+            meals: 0,
+            items: 0,
+            body: 0,
+        };  
         for (let day of archive.mealHistory) {
             let date = typeof day.date === 'number' ? day.date : +day.date;
             let existingDay = await this.days.where('date').equals(date).first()
@@ -509,6 +515,7 @@ export class Database extends Dexie {
                 newDayId = existingDay.id;
             } else {
                 newDayId = await this.days.put({date});
+                result.days++
             }
             for (let meal of day.meals) {
                 let existingMeal = await this.meals.where('dayId').equals(newDayId).and(m => m.name == meal.name && m.time == meal.time).first();
@@ -516,11 +523,13 @@ export class Database extends Dexie {
                 if (existingMeal) {
                     newMealId = existingMeal.id
                 } else {
+                    result.meals++
                     newMealId = await this.meals.put({
                         dayId: newDayId,
                         name: meal.name,
                         time: meal.time,
                     });
+                    result.meals++
                 }
                 for (let item of meal.contents) {
                     let existingItem = await this.mealItems.where('mealId').equals(newMealId).and(i => i.name == item.name).first();
@@ -529,6 +538,7 @@ export class Database extends Dexie {
                         delete i.id;
                         i.mealId = newMealId;
                         await this.mealItems.put(i);
+                        result.items++;
                     }
                 }
             }
@@ -540,7 +550,9 @@ export class Database extends Dexie {
                 let newBody = Object.assign({}, body);
                 delete newBody.id;
                 await this.users.put(newBody)
+                result.body++;
             }
         }
+        return result;
     }
 }
