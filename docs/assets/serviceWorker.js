@@ -135,8 +135,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         ev.waitUntil(self.skipWaiting());
     });
     self.addEventListener('activate', function (ev) {
-        ev.waitUntil(self.caches.keys()
-            .then(function () { return self.clients.claim(); }));
+        ev.waitUntil(self.clients.claim());
     });
     self.addEventListener('fetch', function (ev) {
         ev.respondWith(handleFetch(ev));
