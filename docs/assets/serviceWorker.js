@@ -136,15 +136,6 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     });
     self.addEventListener('activate', function (ev) {
         ev.waitUntil(self.caches.keys()
-            .then(function (cacheNames) { return Promise.all(cacheNames.map(function (name) {
-            console.log('deleting old cache', name);
-            if (name != CACHE_NAME) {
-                return self.caches.delete(name);
-            }
-            else {
-                return Promise.resolve(false);
-            }
-        })); })
             .then(function () { return self.clients.claim(); }));
     });
     self.addEventListener('fetch', function (ev) {
