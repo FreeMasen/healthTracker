@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>HealthTracker</title>
+  <base href="/healthTracker/">  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+<link rel="stylesheet" href="styles.83a340d32df0f5ce95c8.css"></head>
+<body>
+  <app-root></app-root>
+  <script>
+    if ('serviceWorker' in navigator && location.protocol === 'https') {
+      navigator.serviceWorker.register('/healthTracker/assets/serviceWorker.js')
+          .then(() => console.log('successfully registered service worker'))
+          .catch(e => {
+              console.error('error registering service worker', e);
+          });
+  }
+  </script>
+<script type="text/javascript" src="runtime.a5dd35324ddfd942bef1.js"></script><script type="text/javascript" src="es2015-polyfills.c8046dc9ad8d293291c4.js" nomodule></script><script type="text/javascript" src="polyfills.a1aacee915b46004ac1e.js"></script><script type="text/javascript" src="main.bd2338a84a137254fd76.js"></script></body>
+</html>

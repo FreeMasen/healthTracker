@@ -23162,7 +23162,7 @@ var Database = /** @class */ (function (_super) {
         return tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"](this, void 0, void 0, function () {
             return tslib__WEBPACK_IMPORTED_MODULE_0__["__generator"](this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.users.orderBy('id').reverse().limit(50).toArray()];
+                    case 0: return [4 /*yield*/, this.users.orderBy('updated').reverse().limit(50).toArray()];
                     case 1: return [2 /*return*/, (_a.sent()).map(function (u) {
                             if (u.updated) {
                                 u.updated = moment__WEBPACK_IMPORTED_MODULE_2__(u.updated);
@@ -23274,78 +23274,83 @@ var Database = /** @class */ (function (_super) {
     };
     Database.prototype.addMeal = function (date, name, contents) {
         return tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"](this, void 0, void 0, function () {
-            var day, e_1, dayId, e_2, time, mealId, iMeal, e_3, _i, contents_1, item, e_4;
+            var dayDate, day, e_1, dayId, e_2, time, mealId, iMeal, e_3, _i, contents_1, item, e_4;
             return tslib__WEBPACK_IMPORTED_MODULE_0__["__generator"](this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        _a.trys.push([0, 2, , 3]);
-                        return [4 /*yield*/, this.days.where('date').equals(date.format(DAY_FORMAT)).first()];
+                        console.log('Data.addMeal', date.toLocaleString(), name, contents.map(function (i) { return i.name; }).join(','));
+                        dayDate = date.clone().startOf('day');
+                        _a.label = 1;
                     case 1:
-                        day = _a.sent();
-                        return [3 /*break*/, 3];
+                        _a.trys.push([1, 3, , 4]);
+                        return [4 /*yield*/, this.days.where('date').equals(+dayDate).first()];
                     case 2:
-                        e_1 = _a.sent();
-                        console.error('Failed to get day from date', date.format(DAY_FORMAT));
-                        return [3 /*break*/, 3];
+                        day = _a.sent();
+                        return [3 /*break*/, 4];
                     case 3:
-                        if (!!day) return [3 /*break*/, 8];
-                        _a.label = 4;
+                        e_1 = _a.sent();
+                        console.error('Failed to get day from date', dayDate.format(DAY_FORMAT));
+                        return [3 /*break*/, 4];
                     case 4:
-                        _a.trys.push([4, 6, , 7]);
-                        return [4 /*yield*/, this.days.put({
-                                date: +date,
-                            })];
+                        if (!!day) return [3 /*break*/, 9];
+                        _a.label = 5;
                     case 5:
-                        dayId = _a.sent();
-                        return [3 /*break*/, 7];
+                        _a.trys.push([5, 7, , 8]);
+                        return [4 /*yield*/, this.days.put({
+                                date: +dayDate,
+                            })];
                     case 6:
+                        dayId = _a.sent();
+                        return [3 /*break*/, 8];
+                    case 7:
                         e_2 = _a.sent();
-                        return [2 /*return*/, console.error('Failed to insert non-existent day', date.format(DAY_FORMAT))];
-                    case 7: return [3 /*break*/, 9];
-                    case 8:
-                        dayId = day.id;
-                        _a.label = 9;
+                        return [2 /*return*/, console.error('Failed to insert non-existent day', dayDate.format(DAY_FORMAT))];
+                    case 8: return [3 /*break*/, 10];
                     case 9:
+                        dayId = day.id;
+                        _a.label = 10;
+                    case 10:
                         time = {
                             hours: date.hours(),
                             minutes: date.minutes(),
                         };
+                        console.log('time', time, date.toLocaleString());
                         iMeal = {
                             dayId: dayId,
                             name: name,
                             time: time,
                         };
-                        _a.label = 10;
-                    case 10:
-                        _a.trys.push([10, 12, , 13]);
-                        return [4 /*yield*/, this.meals.put(iMeal)];
+                        _a.label = 11;
                     case 11:
-                        mealId = _a.sent();
-                        return [3 /*break*/, 13];
+                        _a.trys.push([11, 13, , 14]);
+                        return [4 /*yield*/, this.meals.put(iMeal)];
                     case 12:
+                        mealId = _a.sent();
+                        return [3 /*break*/, 14];
+                    case 13:
                         e_3 = _a.sent();
                         return [2 /*return*/, console.error('Failed to insert new meal', iMeal)];
-                    case 13:
-                        _i = 0, contents_1 = contents;
-                        _a.label = 14;
                     case 14:
-                        if (!(_i < contents_1.length)) return [3 /*break*/, 19];
-                        item = contents_1[_i];
-                        item.mealId = mealId;
+                        _i = 0, contents_1 = contents;
                         _a.label = 15;
                     case 15:
-                        _a.trys.push([15, 17, , 18]);
-                        return [4 /*yield*/, this.mealItems.put(item)];
+                        if (!(_i < contents_1.length)) return [3 /*break*/, 20];
+                        item = contents_1[_i];
+                        item.mealId = mealId;
+                        _a.label = 16;
                     case 16:
-                        _a.sent();
-                        return [3 /*break*/, 18];
+                        _a.trys.push([16, 18, , 19]);
+                        return [4 /*yield*/, this.mealItems.put(item)];
                     case 17:
+                        _a.sent();
+                        return [3 /*break*/, 19];
+                    case 18:
                         e_4 = _a.sent();
                         return [2 /*return*/, console.error('failed to insert mealItem', item)];
-                    case 18:
+                    case 19:
                         _i++;
-                        return [3 /*break*/, 14];
-                    case 19: return [2 /*return*/];
+                        return [3 /*break*/, 15];
+                    case 20: return [2 /*return*/];
                 }
             });
         });
