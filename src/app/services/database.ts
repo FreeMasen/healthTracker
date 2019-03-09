@@ -363,53 +363,7 @@ export class Database extends Dexie {
         return ret;
     }
 
-    async addMeal(date: moment.Moment, name: string, contents: MealItem[]) {
-        console.log('Data.addMeal', date.toLocaleString(), name, contents.map(i => i.name).join(','));
-        let dayDate = date.clone().startOf('day');
-        let day: IDay;
-        try {
-            day = await this.days.where('date').equals(+dayDate).first();
-        } catch (e) {
-            console.error('Failed to get day from date', dayDate.format(DAY_FORMAT))
-        }
-        let dayId: number;
-        if (!day) {
-            try {
-                dayId = await this.days.put({
-                    date: +dayDate,
-                })
-
-            } catch (e) {
-                return console.error('Failed to insert non-existent day', dayDate.format(DAY_FORMAT));
-            }
-        } else {
-            dayId = day.id;
-        }
-        let time: ITime = {
-            hours: date.hours(),
-            minutes: date.minutes(),
-        }
-        console.log('time', time, date.toLocaleString());
-        let mealId: number;
-        let iMeal = {
-            dayId,
-            name,
-            time,
-        };
-        try {
-            mealId = await this.meals.put(iMeal);
-        } catch (e) {
-            return console.error('Failed to insert new meal', iMeal);
-        }
-        for (let item of contents) {
-            item.mealId = mealId;
-            try {
-                await this.mealItems.put(item);
-            } catch (e) {
-                return console.error('failed to insert mealItem', item);
-            }
-        }
-    }
+    
     /**
      * Find a food by name
      * @param term The name to search

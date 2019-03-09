@@ -1,5 +1,5 @@
-<mat-horizontal-stepper>
-    <mat-step *ngIf="basicInfo" [stepControl]="basicInfo">
+<mat-horizontal-stepper [style.display]="loading ? 'none' : 'block'">
+    <mat-step [stepControl]="basicInfo">
         <form [formGroup]="basicInfo">
             <ng-template matStepLabel>Meal Details</ng-template>
             <mat-form-field style="margin-right: 5px;">

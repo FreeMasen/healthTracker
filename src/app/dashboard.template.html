@@ -56,6 +56,17 @@
                     </mat-cell>
                     <mat-footer-cell *matFooterCellDef></mat-footer-cell>
                 </ng-container>
+                <ng-container matColumnDef="edit">
+                    <mat-header-cell *matHeaderCellDef>
+                        <mat-icon style="padding-left: 13px;">edit</mat-icon>
+                    </mat-header-cell>
+                    <mat-cell *matCellDef="let meal">
+                        <button style="margin-left: 5px;" mat-mini-fab routerLink="/meal/edit/{{meal.id}}">
+                            <mat-icon>edit</mat-icon>
+                        </button>
+                    </mat-cell>
+                    <mat-footer-cell *matFooterCellDef></mat-footer-cell>
+                </ng-container>
                 <mat-row *matHeaderRowDef="mealColumns"></mat-row>
                 <mat-row *matRowDef="let myRowData; columns: mealColumns"></mat-row>
                 <mat-row *matFooterRowDef="mealColumns" style="font-weight: bold;"></mat-row>
@@ -92,6 +103,17 @@
                             <mat-icon>delete</mat-icon>
                         </button>
                     </mat-cell>
+                </ng-container>
+                <ng-container matColumnDef="edit">
+                    <mat-header-cell *matHeaderCellDef>
+                        <mat-icon style="padding-left: 13px;">edit</mat-icon>
+                    </mat-header-cell>
+                    <mat-cell *matCellDef="let user">
+                        <button style="margin-left: 5px;" mat-mini-fab routerLink="personal-info/edit/{{user.id}}">
+                            <mat-icon>edit</mat-icon>
+                        </button>
+                    </mat-cell>
+                    <mat-footer-cell *matFooterCellDef></mat-footer-cell>
                 </ng-container>
                 <mat-row *matHeaderRowDef="columnsToDisplay"></mat-row>
                 <mat-row *matRowDef="let myRowData; columns: columnsToDisplay"></mat-row>

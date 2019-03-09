@@ -10,8 +10,8 @@ import * as moment from 'moment';
 export class DashboardComponent {
     history: IUser[] = [];
     today: Day;
-    columnsToDisplay = ['updated', 'weight', 'bodyFatPercentage', 'delete'];
-    mealColumns = ['name', 'time', 'calories', 'carbs', 'fat', 'protein', 'delete'];
+    columnsToDisplay = ['updated', 'weight', 'bodyFatPercentage', 'delete', 'edit'];
+    mealColumns = ['name', 'time', 'calories', 'carbs', 'fat', 'protein', 'delete', 'edit'];
     constructor(
         private data: Data
     ) { }

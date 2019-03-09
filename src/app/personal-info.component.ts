@@ -3,6 +3,8 @@ import { ActivityLevel, Data, IUser } from './services/data';
 import { normalizeString } from './services/util';
 import { Messenger } from './services/messenger';
 import { Location } from '@angular/common';
+import { ActivatedRoute } from '@angular/router';
+import * as moment from 'moment';
 
 @Component({
     selector: 'personal-info',
@@ -23,9 +25,16 @@ export class PersonalInfoComponent {
         private data: Data,
         private messenger: Messenger,
         private location: Location,
+        private route: ActivatedRoute,
     ) {}
     async ngOnInit() {
-        let user = await this.data.getLatestUser();
+        let id = this.route.snapshot.paramMap.get('id');
+        let user: IUser;
+        if (id) {
+            user = await this.data.users.get(+id);
+        } else {
+            user = await this.data.getLatestUser();
+        }
         if (user) {
             this.weight = user.weight;
             this.heightFeet = Math.floor(user.height / 12);
@@ -42,22 +51,34 @@ export class PersonalInfoComponent {
         if (firstMissing) {
             return this.messenger.send(`${normalizeString(firstMissing)} is required`, true);
         }
-        await this.data.addUser(user).then(() => {
-            this.onSave.emit()
-            if (this.location.isCurrentPathEqualTo('/personal-info/add')) {
-                this.location.back();   
-            }
-        });
+        let id = this.route.snapshot.paramMap.get('id');
+        
+        if (user.id) {
+            await this.data.users.put(user).then(() => {
+                this.location.back();
+            });
+        } else {
+            await this.data.addUser(user).then(() => {
+                this.onSave.emit()
+                if (this.location.isCurrentPathEqualTo('/personal-info/add')) {
+                    this.location.back();   
+                }
+            });
+        }
     }
 
     infoAsUser(): IUser {
-        return {
+        let ret: IUser = {
             weight: this.weight,
             height: (this.heightInches || 0) + (this.heightFeet * 12),
             age: this.age,
             bodyFatPercentage: this.bodyFatPercent,
             activityLevel: this.activityLevel,
             weightTarget: this.weightTarget,
+            updated: +moment(),
         };
+        let id = this.route.snapshot.paramMap.get('id');
+        ret.id = +id;
+        return ret;
     }
 }

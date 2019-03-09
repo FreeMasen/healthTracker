@@ -3,10 +3,10 @@ import { FormBuilder, FormGroup } from '@angular/forms';
 import { MealName, MealItem, Data, IFoodDesc } from './services/data';
 import { MatStepper } from '@angular/material/stepper';
 import * as moment from 'moment';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { timeToTime } from './services/util';
 import { Observable } from 'rxjs';
-import { map, startWith, debounceTime, switchMap, } from 'rxjs/operators';
+import { debounceTime, switchMap, } from 'rxjs/operators';
 import { MatAutocomplete } from '@angular/material';
 
 @Component({
@@ -25,19 +25,22 @@ export class AddMealComponent {
     columnsToDisplay = ['name', 'calories', 'carbs', 'fat', 'protein', 'delete'];
     confirmColumns = ['name', 'calories', 'carbs', 'fat', 'protein'];
     recommendedFoods: Observable<MealItem[]>;
+    loading = true;
     @ViewChild(MatAutocomplete)
     autoComplete: MatAutocomplete;
     constructor(
         private builder: FormBuilder,
         private data: Data,
         private router: Router,
+        private route: ActivatedRoute,
     ) { }
     async ngOnInit() {
         this.basicInfo = this.builder.group({
             date: this.mealDate,
             time: this.mealDate.format('HH:mm'),
-            name: MealName.Breakfast,
+            name: MealName.Breakfast
         });
+        
         this.basicInfo.valueChanges.subscribe(change => {
             this.mealName = change.name;
             let mealDate = change.date;
@@ -69,6 +72,34 @@ export class AddMealComponent {
                 }, {emitEvent: false, onlySelf: true});
             });
         });
+        let id = +this.route.snapshot.paramMap.get('id');
+        if (id) {
+            console.log('getting info from db');
+            let meal;
+            let day;
+            try {
+                meal = await this.data.getMeal(id);
+                console.log('got meal', meal);
+                day = await this.data.days.get(meal.dayId);
+            } catch (e) {
+                console.error('error getting info from db',e);
+            }
+            this.mealDate = moment(day.date);
+            this.mealDate.hours(meal.time.hours);
+            this.mealDate.minutes(meal.time.minutes);
+            this.setBasicInfo(meal.name);
+            this.items = meal.contents;
+        }
+        this.loading = false;
+        console.log('ngOnInit end');
+    }
+
+    setBasicInfo(name: MealName) {
+        this.basicInfo.setValue({
+            date: this.mealDate,
+            time: this.mealDate.format('HH:mm'),
+            name
+        });
     }
 
     async getRecommendations(v: string) {
@@ -89,10 +120,17 @@ export class AddMealComponent {
         this.items = this.items.filter((_,i) => i !== idx);
     }
 
-    saveMeal() {        
-        this.data.addMeal(this.mealDate, this.mealName, this.items).then(() => {
-            this.router.navigate(['/']);
-        });
+    saveMeal() {
+        let id = +this.route.snapshot.paramMap.get('id');
+        if (id) {
+            this.data.updateMeal(id, this.mealDate, this.mealName, this.items).then(() => {
+                this.router.navigate(['/']);
+            })
+        } else {
+            this.data.addMeal(this.mealDate, this.mealName, this.items).then(() => {
+                this.router.navigate(['/']);
+            });
+        }
     }
 
     get calories(): number {
