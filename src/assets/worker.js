@@ -23272,89 +23272,6 @@ var Database = /** @class */ (function (_super) {
             });
         });
     };
-    Database.prototype.addMeal = function (date, name, contents) {
-        return tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"](this, void 0, void 0, function () {
-            var dayDate, day, e_1, dayId, e_2, time, mealId, iMeal, e_3, _i, contents_1, item, e_4;
-            return tslib__WEBPACK_IMPORTED_MODULE_0__["__generator"](this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        console.log('Data.addMeal', date.toLocaleString(), name, contents.map(function (i) { return i.name; }).join(','));
-                        dayDate = date.clone().startOf('day');
-                        _a.label = 1;
-                    case 1:
-                        _a.trys.push([1, 3, , 4]);
-                        return [4 /*yield*/, this.days.where('date').equals(+dayDate).first()];
-                    case 2:
-                        day = _a.sent();
-                        return [3 /*break*/, 4];
-                    case 3:
-                        e_1 = _a.sent();
-                        console.error('Failed to get day from date', dayDate.format(DAY_FORMAT));
-                        return [3 /*break*/, 4];
-                    case 4:
-                        if (!!day) return [3 /*break*/, 9];
-                        _a.label = 5;
-                    case 5:
-                        _a.trys.push([5, 7, , 8]);
-                        return [4 /*yield*/, this.days.put({
-                                date: +dayDate,
-                            })];
-                    case 6:
-                        dayId = _a.sent();
-                        return [3 /*break*/, 8];
-                    case 7:
-                        e_2 = _a.sent();
-                        return [2 /*return*/, console.error('Failed to insert non-existent day', dayDate.format(DAY_FORMAT))];
-                    case 8: return [3 /*break*/, 10];
-                    case 9:
-                        dayId = day.id;
-                        _a.label = 10;
-                    case 10:
-                        time = {
-                            hours: date.hours(),
-                            minutes: date.minutes(),
-                        };
-                        console.log('time', time, date.toLocaleString());
-                        iMeal = {
-                            dayId: dayId,
-                            name: name,
-                            time: time,
-                        };
-                        _a.label = 11;
-                    case 11:
-                        _a.trys.push([11, 13, , 14]);
-                        return [4 /*yield*/, this.meals.put(iMeal)];
-                    case 12:
-                        mealId = _a.sent();
-                        return [3 /*break*/, 14];
-                    case 13:
-                        e_3 = _a.sent();
-                        return [2 /*return*/, console.error('Failed to insert new meal', iMeal)];
-                    case 14:
-                        _i = 0, contents_1 = contents;
-                        _a.label = 15;
-                    case 15:
-                        if (!(_i < contents_1.length)) return [3 /*break*/, 20];
-                        item = contents_1[_i];
-                        item.mealId = mealId;
-                        _a.label = 16;
-                    case 16:
-                        _a.trys.push([16, 18, , 19]);
-                        return [4 /*yield*/, this.mealItems.put(item)];
-                    case 17:
-                        _a.sent();
-                        return [3 /*break*/, 19];
-                    case 18:
-                        e_4 = _a.sent();
-                        return [2 /*return*/, console.error('failed to insert mealItem', item)];
-                    case 19:
-                        _i++;
-                        return [3 /*break*/, 15];
-                    case 20: return [2 /*return*/];
-                }
-            });
-        });
-    };
     /**
      * Find a food by name
      * @param term The name to search
@@ -23391,7 +23308,7 @@ var Database = /** @class */ (function (_super) {
     };
     Database.prototype.seed = function (updateCb) {
         return tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"](this, void 0, void 0, function () {
-            var e_5;
+            var e_1;
             return tslib__WEBPACK_IMPORTED_MODULE_0__["__generator"](this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -23415,8 +23332,8 @@ var Database = /** @class */ (function (_super) {
                         _a.sent();
                         return [3 /*break*/, 7];
                     case 6:
-                        e_5 = _a.sent();
-                        console.error('Error seeding', e_5);
+                        e_1 = _a.sent();
+                        console.error('Error seeding', e_1);
                         return [3 /*break*/, 7];
                     case 7: return [2 /*return*/];
                 }
@@ -23425,7 +23342,7 @@ var Database = /** @class */ (function (_super) {
     };
     Database.prototype.seedTable = function (table, route, updateCb) {
         return tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"](this, void 0, void 0, function () {
-            var seedData, e_6, e_7, e_8;
+            var seedData, e_2, e_3, e_4;
             return tslib__WEBPACK_IMPORTED_MODULE_0__["__generator"](this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -23438,9 +23355,9 @@ var Database = /** @class */ (function (_super) {
                         seedData = _a.sent();
                         return [3 /*break*/, 4];
                     case 3:
-                        e_6 = _a.sent();
-                        console.error('Failed to get seed data for', table.name, 'at route', route, e_6);
-                        throw e_6;
+                        e_2 = _a.sent();
+                        console.error('Failed to get seed data for', table.name, 'at route', route, e_2);
+                        throw e_2;
                     case 4:
                         updateCb('clearing', table.name, 100, 0);
                         _a.label = 5;
@@ -23451,9 +23368,9 @@ var Database = /** @class */ (function (_super) {
                         _a.sent();
                         return [3 /*break*/, 8];
                     case 7:
-                        e_7 = _a.sent();
-                        console.error('Failed to clear ', table.name, e_7);
-                        throw e_7;
+                        e_3 = _a.sent();
+                        console.error('Failed to clear ', table.name, e_3);
+                        throw e_3;
                     case 8:
                         updateCb('starting-seed', table.name, 100, 0);
                         _a.label = 9;
@@ -23464,7 +23381,7 @@ var Database = /** @class */ (function (_super) {
                         _a.sent();
                         return [3 /*break*/, 12];
                     case 11:
-                        e_8 = _a.sent();
+                        e_4 = _a.sent();
                         console.error('failed to add data to ', table.name, seedData);
                         return [3 /*break*/, 12];
                     case 12: return [2 /*return*/];
@@ -23474,7 +23391,7 @@ var Database = /** @class */ (function (_super) {
     };
     Database.prototype.batchSeed = function (table, batch, updateCb) {
         return tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"](this, void 0, void 0, function () {
-            var start, len, slice, e_9;
+            var start, len, slice, e_5;
             return tslib__WEBPACK_IMPORTED_MODULE_0__["__generator"](this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -23495,8 +23412,8 @@ var Database = /** @class */ (function (_super) {
                         updateCb('seeding', table.name, batch.length, start);
                         return [3 /*break*/, 5];
                     case 4:
-                        e_9 = _a.sent();
-                        console.error('bailing after error for', table.name, e_9);
+                        e_5 = _a.sent();
+                        console.error('bailing after error for', table.name, e_5);
                         return [3 /*break*/, 6];
                     case 5: return [3 /*break*/, 1];
                     case 6:
