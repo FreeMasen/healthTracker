@@ -47,12 +47,10 @@ export class PersonalInfoComponent {
     }
     async saveInfo() {
         let user = this.infoAsUser();
-        let firstMissing = Object.getOwnPropertyNames(user).find(name => !user[name]);
+        let firstMissing = Object.getOwnPropertyNames(user).find(name => name != 'id' && !user[name]);
         if (firstMissing) {
             return this.messenger.send(`${normalizeString(firstMissing)} is required`, true);
-        }
-        let id = this.route.snapshot.paramMap.get('id');
-        
+        }        
         if (user.id) {
             await this.data.users.put(user).then(() => {
                 this.location.back();
