@@ -10,29 +10,29 @@ export function normalizeString(value: string): string {
             ret += char;
         }
     }
-    return ret
+    return ret;
 }
 
 export function timeToTime(time: string): ITime {
-    let [hoursStr, minutesAndTod] = time.split(':');
-    let [minutesStr, tod] = minutesAndTod.split(' ');
-    let hours = parseInt(hoursStr);
-    let minutes = parseInt(minutesStr);
+    const [hoursStr, minutesAndTod] = time.split(':');
+    const [minutesStr, tod] = minutesAndTod.split(' ');
+    const hours = parseInt(hoursStr, 10);
+    const minutes = parseInt(minutesStr, 10);
     if (tod === 'p') {
         return {
             hours: hours + 12,
             minutes,
-        }
+        };
     }
     return {
         hours,
         minutes,
-    }
+    };
 }
 
 export async function readFile(f: File): Promise<string> {
-    return new Promise((r,j) => {
-        let reader = new FileReader();
+    return new Promise((r, j) => {
+        const reader = new FileReader();
         reader.onerror = e => j(e);
         reader.onload = s => r(reader.result as string);
         reader.readAsText(f);

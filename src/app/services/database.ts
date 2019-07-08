@@ -1,7 +1,7 @@
+import { EventEmitter } from '@angular/core';
 import Dexie from 'dexie';
 import * as moment from 'moment';
-import { IDropboxInfo, IDropboxChanges } from './sync';
-import { EventEmitter } from '@angular/core';
+import { IDropboxChanges, IDropboxInfo } from './sync';
 const DAY_FORMAT = 'YYYY/MM/DD';
 
 export const ENERGY_ID = 208;
@@ -52,7 +52,7 @@ export interface IWeightInfo {
     seq: number;
     amount: number;
     measurementDesc: string;
-    grams:number;
+    grams: number;
 }
 
 export interface IUser {
@@ -64,11 +64,29 @@ export interface IUser {
     age: number;
     weightTarget: number;
     updated?: moment.Moment | number;
+    deleted: boolean;
 }
 
 export interface IDay {
     id?: string;
     date: number;
+    deleted: boolean;
+}
+
+export interface IArchiveDay {
+    id: string;
+    date: number;
+    meals: IArchivedMeal[];
+    deleted: boolean;
+}
+
+export interface IArchivedMeal {
+    id: string;
+    time: ITime;
+    dayId: string;
+    name: string;
+    deleted: boolean;
+    items: MealItem[];
 }
 
 export interface IMeal {
@@ -76,6 +94,7 @@ export interface IMeal {
     time: ITime;
     dayId: string;
     name: string;
+    deleted: boolean;
 }
 
 export interface INutrient {
@@ -105,7 +124,7 @@ export interface ICarbs {
 
 export interface IFat {
     grams: number;
-    subFats: INutrient[]
+    subFats: INutrient[];
 }
 
 export interface ISeedInfo {
@@ -129,8 +148,8 @@ export enum MealName {
 }
 
 export interface IArchive {
-    mealHistory: Day[],
-    bodyHistory: IUser[],
+    mealHistory: IArchiveDay[];
+    bodyHistory: IUser[];
 }
 
 export class Day {
@@ -148,28 +167,29 @@ export class Day {
     }
 
     calories(): number {
-        return this.meals.reduce((acc, meal) => acc + meal.calories(), 0)
+        return this.meals.reduce((acc, meal) => acc + meal.calories(), 0);
     }
 
     carbs(): number {
-        return this.meals.reduce((a, m) => a + m.carbs(), 0)
+        return this.meals.reduce((a, m) => a + m.carbs(), 0);
     }
-    
+
     fat(): number {
-        return this.meals.reduce((a, m) => a + m.fat(), 0)
+        return this.meals.reduce((a, m) => a + m.fat(), 0);
     }
 
     protein(): number {
-        return this.meals.reduce((a, m) => a + m.protein(), 0)
+        return this.meals.reduce((a, m) => a + m.protein(), 0);
     }
 
-    forDb(): IDay {
-        let ret: IDay = {
-            date: +this.date
-        }
-        if (this.id) {
-            ret.id = this.id
+    toJson(): any {
+        const ret: any = {
+            date: +this.date,
+            meals: this.meals,
         };
+        if (this.id) {
+            ret.id = this.id;
+        }
         return ret;
     }
 }
@@ -195,7 +215,7 @@ export class Meal {
     carbs(): number {
         return this.contents.reduce((a, c) => a + c.carbs || 0, 0);
     }
-    
+
     fat(): number {
         return this.contents.reduce((a, c) => a + c.fat || 0, 0);
     }
@@ -214,7 +234,7 @@ export class Meal {
             hours = this.time.hours;
             suffix = 'a';
         }
-        let minutes = `0${this.time.minutes}`.substr(-2);
+        const minutes = `0${this.time.minutes}`.substr(-2);
         return `${hours}:${minutes} ${suffix}`;
     }
     formattedName(short: boolean): string {
@@ -233,17 +253,6 @@ export class Meal {
                 return short ? '?' : 'Unknown';
         }
     }
-    forDb(): IMeal {
-        let ret: IMeal = {
-            name: this.name,
-            time: this.time,
-            dayId: this.dayId,
-        }
-        if (this.id) {
-            ret.id = this.id;
-        }
-        return ret;
-    }
 }
 
 
@@ -257,7 +266,7 @@ export class MealItem {
         public fat?: number,
         public mealId?: string,
         id?: string,
-    ) { 
+    ) {
         if (id) {
             this.id = id;
         }
@@ -306,8 +315,8 @@ export class Database extends Dexie {
      * Check if the database is ready to be searched
      */
     async isReady() {
-        
-        let lastUpdate = await this.seeds.orderBy('id').last();
+
+        const lastUpdate = await this.seeds.orderBy('id').last();
         return lastUpdate.state === 'complete';
     }
     /**
@@ -315,15 +324,14 @@ export class Database extends Dexie {
      * @param user The user information to add
      */
     async addUser(info: IUser) {
-        debugger;
         if (info.id) {
             delete info.id;
         }
         if (!info.updated) {
-            info.updated = +moment(); //unix ms timestamp
+            info.updated = +moment(); // unix ms timestamp
         }
-        if (typeof info.updated != 'number') {
-            info.updated = +info.updated; //unix ms timestamp
+        if (typeof info.updated !== 'number') {
+            info.updated = +info.updated; // unix ms timestamp
         }
         await this.users.put(info);
         this.renderableChanges.emit();
@@ -332,13 +340,19 @@ export class Database extends Dexie {
      * Get the last entry for the user's history
      */
     async getLatestUser(): Promise<IUser> {
-        return await this.users.orderBy('id').last()
+        return await this.users.orderBy('id').last();
     }
     /**
      * Get the last 50 user history entries
      */
     async getUserHistory(): Promise<IUser[]> {
-        return (await this.users.orderBy('updated').reverse().limit(50).toArray()).map(u => {
+        const fromDb = await this.users
+            .orderBy('updated')
+            .reverse()
+            .limit(50)
+            .and(b => !b.deleted)
+            .toArray();
+        return fromDb.map(u => {
             if (u.updated) {
                 u.updated = moment(u.updated);
             }
@@ -350,65 +364,80 @@ export class Database extends Dexie {
      * @param id The ID of the entry to be removed
      */
     async removeUserEntry(id: string) {
-        await this.users.delete(id);
+        const fromDb = await this.users.get(id);
+        fromDb.deleted = true;
+        await this.users.put(fromDb);
         this.syncableChanges.emit();
     }
 
     async removeMeal(id: string) {
-        await this.meals.delete(id);
-        await this.mealItems.where('mealId').equals(id).delete();
+        const fromDb = await this.meals.get(id);
+        fromDb.deleted = true;
+        await this.meals.put(fromDb);
         this.syncableChanges.emit();
     }
     /**
      * Get today's consumed information
      */
     async getTodaysEntries() {
-        return this.getMealsForDay(moment())
+        return this.getMealsForDay(moment());
     }
     /**
      * Get the stored meals for the date
      * @param day The date to get from the db
      */
     async getMealsForDay(date: moment.Moment) {
-        let dt = +date.startOf('day');
+        const dt = +date.startOf('day');
         let day = await this.days.where('date').equals(dt).first();
         if (!day) {
             day = {
                 date: dt,
+                deleted: false,
             };
-            let id = await this.days.put(day);
+            const id = await this.days.put(day);
             return new Day(date, [], id);
         }
         return this.fillDay(day);
     }
 
     private async fillDay(day: IDay): Promise<Day> {
-        let dbMeals = await this.meals.where('dayId').equals(day.id).toArray();
-        let ret = new Day(day.date, new Array(dbMeals.length), day.id);
-        for (let i = 0; i < dbMeals.length;i++) {
-            let dbMeal = dbMeals[i];
-            let dbContents = await this.mealItems
+        const dbMeals = await this.meals.where('dayId').equals(day.id).and(d => !d.deleted).toArray();
+        const ret = new Day(day.date, new Array(dbMeals.length), day.id);
+        for (let i = 0; i < dbMeals.length; i++) {
+            const dbMeal = dbMeals[i];
+            const dbContents = await this.mealItems
                                     .where('mealId')
                                     .equals(dbMeal.id)
                                     .toArray();
-            let contents = dbContents.map(dbItem => new MealItem(dbItem.name, dbItem.calories, dbItem.carbs, dbItem.protein, dbItem.fat, dbItem.mealId, dbItem.id));
+            const contents = dbContents.map(
+                dbItem =>
+                    new MealItem(
+                        dbItem.name,
+                        dbItem.calories,
+                        dbItem.carbs,
+                        dbItem.protein,
+                        dbItem.fat,
+                        dbItem.mealId,
+                        dbItem.id
+                    )
+                );
             ret.meals[i] = new Meal(dbMeal.name as MealName, dbMeal.time, contents, day.id, dbMeal.id);
         }
         return ret;
     }
 
-    
+
     /**
      * Find a food by name
      * @param term The name to search
      */
     async findFood(term: string): Promise<MealItem[]> {
-        let foods = await this.mealItems
+        const foods = await this.mealItems
                         .where('name')
                         .startsWithIgnoreCase(term)
                         .distinct()
                         .sortBy('name');
-        return foods.map(f => new MealItem(f.name, f.calories, f.carbs, f.protein, f.fat, null, f.id))
+        return foods.map(f => new MealItem(f.name, f.calories, f.carbs, f.protein, f.fat, null, f.id));
     }
     /**
      * Get the details for a food from the search
@@ -423,22 +452,27 @@ export class Database extends Dexie {
             if (await this.seeds.count() > 0) {
                 this.seeds.clear();
             }
-            await this.seeds.add({when: moment().toISOString(), state: 'start'})
+            await this.seeds.add({when: moment().toISOString(), state: 'start'});
             await this.seedTable(this.foods, 'food_details.json', updateCb);
             await this.seedTable(this.weights, 'weight.json', updateCb);
             await this.seeds.add({when: moment().toISOString(), state: 'complete'});
-            
+
         } catch (e) {
             console.error('Error seeding', e);
         }
 
     }
 
-    async seedTable<T, K>(table: Dexie.Table<T, K>, route: string, updateCb: (event: string, tableName: string, target: number, updatedValue: number) => void): Promise<void> {
+    async seedTable<T, K>(
+        table: Dexie.Table<T, K>,
+        route: string,
+        updateCb: (event: string, tableName: string,
+                   target: number, updatedValue: number) => void
+        ): Promise<void> {
         let seedData;
         updateCb('fetching', table.name, 100, 0);
         try {
-            seedData = await fetch(route).then(res => res.json()); 
+            seedData = await fetch(route).then(res => res.json());
         } catch (e) {
             console.error('Failed to get seed data for', table.name, 'at route', route, e);
             throw e;
@@ -458,12 +492,17 @@ export class Database extends Dexie {
         }
     }
 
-    private async batchSeed<T, K>(table: Dexie.Table<T, K>, batch: any[], updateCb: (event: string, tableName: string, target: number, updatedValue: number) => void): Promise<void> {
+    private async batchSeed<T, K>(
+        table: Dexie.Table<T, K>,
+        batch: any[],
+        updateCb: (event: string, tableName: string,
+                   target: number, updatedValue: number) => void
+        ): Promise<void> {
         let start = 0;
         updateCb('seeding', table.name, batch.length, start);
         while (start < batch.length - 1) {
-            let len = Math.min(10000, batch.length - start);
-            let slice = batch.slice(start, start + len);
+            const len = Math.min(10000, batch.length - start);
+            const slice = batch.slice(start, start + len);
             start += len;
             try {
                 await table.bulkAdd(slice);
@@ -477,72 +516,68 @@ export class Database extends Dexie {
     }
 
     async getAllUserData(): Promise<IArchive> {
-        let dbDays = await this.days.toArray();
-        let mealHistory = new Array(dbDays.length);
-        for (let i = 0;i < dbDays.length;i++) {
+        const dbDays = await this.days.toArray();
+        const mealHistory = new Array(dbDays.length);
+        for (let i = 0; i < dbDays.length; i++) {
             mealHistory[i] = await this.fillDay(dbDays[i]);
         }
-        let bodyHistory = await this.users.toArray();
+        const bodyHistory = await this.users.toArray();
         return {
             mealHistory,
             bodyHistory,
-        }
+        };
     }
 
     async importArchive(archive: IArchive, syncable: boolean = true) {
-        let result = {
+        const result = {
             days: 0,
             meals: 0,
             items: 0,
             body: 0,
-        };  
-        for (let day of archive.mealHistory) {
-            let date = typeof day.date === 'number' ? day.date : +day.date;
-            let existingDay = await this.days.where('id').equals(day.id).first();
-            let newDayId: string;
-            if (existingDay) {
-                newDayId = existingDay.id;
-            } else {
-                newDayId = await this.days.put({date});
-                result.days++
+        };
+        for (const day of archive.mealHistory) {
+            const existingDay = await this.days.where('id').equals(day.id).first();
+            if (!existingDay) {
+                await this.days.put({
+                    id: day.id,
+                    date: day.date,
+                    deleted: day.deleted
+                });
+                result.days++;
             }
-            for (let meal of day.meals) {
-                let existingMeal = await this.meals.where('id')
+            for (const meal of day.meals) {
+                const existingMeal = await this.meals.where('id')
                     .equals(meal.id)
                     .first();
-                let newMealId: string;
-                if (existingMeal) {
-                    newMealId = existingMeal.id
-                } else {
-                    result.meals++
-                    newMealId = await this.meals.put({
-                        dayId: newDayId,
-                        name: meal.name,
+                if (!existingMeal) {
+                    const toInsert = {
+                        id: meal.id,
                         time: meal.time,
-                    });
-                    result.meals++
+                        dayId: day.id,
+                        name: meal.name,
+                        deleted: meal.deleted
+                    };
+                    await this.meals.put(toInsert);
+                    result.meals++;
                 }
-                for (let item of meal.contents) {
-                    let existingItem = await this.mealItems
+                for (const item of meal.items) {
+                    const existingItem = await this.mealItems
                         .where('id')
                         .equals(item.id)
                         .first();
                     if (!existingItem) {
-                        let i = Object.assign({}, item);
-                        delete i.id;
-                        i.mealId = newMealId;
+                        const i = Object.assign({}, item);
+                        i.mealId = meal.id;
                         await this.mealItems.put(i);
                         result.items++;
                     }
                 }
             }
         }
-        for (let body of archive.bodyHistory) {
-            let existingBody = await this.users.where('id').equals(body.id).first();
+        for (const body of archive.bodyHistory) {
+            const existingBody = await this.users.where('id').equals(body.id).first();
             if (!existingBody) {
-                let newBody = Object.assign({}, body);
-                delete newBody.id;
-                await this.users.put(newBody)
+                await this.users.put(body);
                 result.body++;
             }
         }
@@ -561,7 +596,7 @@ export class Database extends Dexie {
         return this.dropboxInfo.limit(1).first();
     }
     public async getLastDropboxHash(): Promise<string> {
-        let record = await this.dropboxHash.orderBy('timestamp').reverse().limit(1).first();
+        const record = await this.dropboxHash.orderBy('timestamp').reverse().limit(1).first();
         if (!record) {
             return null;
         }

@@ -28,14 +28,12 @@ export class Data extends Database {
     }
 
     async getMeal(id: string): Promise<Meal> {
-        console.log('getMeal', id);
         let dbMeal: IMeal;
         try {
             dbMeal = await this.meals.get(id);
         } catch (e) {
             console.error('error getting dbMeal', id, e);
         }
-        console.log('dbMeal', dbMeal);
         if (!dbMeal) {
             throw new Error('No meal found');
         }
@@ -44,8 +42,7 @@ export class Data extends Database {
         return new Meal(dbMeal.name as MealName, dbMeal.time, mealItems, dbMeal.dayId, dbMeal.id);
     }
 
-    async updateMeal(id: string, date: moment.Moment, name: MealName, items: MealItem[]) {
-        console.log('updateMeal', id, date.toLocaleString(), name, items);
+    async updateMeal(id: string, date: moment.Moment, name: MealName, items: MealItem[], deleted: boolean = false) {
         const dayDate = date.clone();
         dayDate.startOf('day');
         let day: IDay;
@@ -59,6 +56,7 @@ export class Data extends Database {
             try {
                 dayId = await this.days.put({
                     date: +dayDate,
+                    deleted: false,
                 });
             } catch (e) {
                 return console.error('Failed to insert non-existent day', dayDate.toLocaleString());
@@ -75,9 +73,10 @@ export class Data extends Database {
             dayId,
             name,
             time,
+            deleted,
         };
         await this.meals.put(iMeal);
-        const itemIds = items.map(i => i.id).filter(id => id);
+        const itemIds = items.map(i => i.id).filter(i => i);
         const toBeDeleted = await this.mealItems.where('mealId').equals(id).and(item => itemIds.indexOf(item.id) < 0).primaryKeys();
         await this.mealItems.bulkDelete(toBeDeleted);
         await this.mealItems.bulkPut(items.map(item => {
@@ -101,6 +100,7 @@ export class Data extends Database {
             try {
                 dayId = await this.days.put({
                     date: +dayDate,
+                    deleted: false,
                 });
 
             } catch (e) {
@@ -118,6 +118,7 @@ export class Data extends Database {
             dayId,
             name,
             time,
+            deleted: false,
         };
         try {
             mealId = await this.meals.put(iMeal);

@@ -130,11 +130,11 @@ export class AddMealComponent {
     }
 
     saveMeal() {
-        let id = this.route.snapshot.paramMap.get('id');
+        const id = this.route.snapshot.paramMap.get('id');
         if (id) {
             this.data.updateMeal(id, this.mealDate, this.mealName, this.items).then(() => {
                 this.router.navigate(['/']);
-            })
+            });
         } else {
             this.data.addMeal(this.mealDate, this.mealName, this.items).then(() => {
                 this.router.navigate(['/']);

@@ -28,7 +28,7 @@ export class PersonalInfoComponent {
         private route: ActivatedRoute,
     ) {}
     async ngOnInit() {
-        let id = this.route.snapshot.paramMap.get('id');
+        const id = this.route.snapshot.paramMap.get('id');
         let user: IUser;
         if (id) {
             user = await this.data.users.get(id);
@@ -42,31 +42,31 @@ export class PersonalInfoComponent {
             this.age = user.age;
             this.bodyFatPercent = user.bodyFatPercentage;
             this.activityLevel = user.activityLevel as ActivityLevel;
-            this.weightTarget = user.weightTarget
+            this.weightTarget = user.weightTarget;
         }
     }
     async saveInfo() {
-        let user = this.infoAsUser();
-        let firstMissing = Object.getOwnPropertyNames(user).find(name => name != 'id' && !user[name]);
+        const user = this.infoAsUser();
+        const firstMissing = Object.getOwnPropertyNames(user).find(name => name !== 'id' && !user[name]);
         if (firstMissing) {
             return this.messenger.send(`${normalizeString(firstMissing)} is required`, true);
-        }        
+        }
         if (user.id) {
             await this.data.users.put(user).then(() => {
                 this.location.back();
             });
         } else {
             await this.data.addUser(user).then(() => {
-                this.onSave.emit()
+                this.onSave.emit();
                 if (this.location.isCurrentPathEqualTo('/personal-info/add')) {
-                    this.location.back();   
+                    this.location.back();
                 }
             });
         }
     }
 
     infoAsUser(): IUser {
-        let ret: IUser = {
+        const ret: IUser = {
             weight: this.weight,
             height: (this.heightInches || 0) + (this.heightFeet * 12),
             age: this.age,
@@ -74,8 +74,9 @@ export class PersonalInfoComponent {
             activityLevel: this.activityLevel,
             weightTarget: this.weightTarget,
             updated: +moment(),
+            deleted: false,
         };
-        let id = this.route.snapshot.paramMap.get('id');
+        const id = this.route.snapshot.paramMap.get('id');
         if (id && id.length !== 0) {
             ret.id = id;
         }

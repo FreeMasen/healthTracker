@@ -60304,10 +60304,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "MealItem", function() { return MealItem; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Database", function() { return Database; });
 /* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! tslib */ "./node_modules/tslib/tslib.es6.js");
-/* harmony import */ var dexie__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! dexie */ "./node_modules/dexie/dist/dexie.es.js");
-/* harmony import */ var moment__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! moment */ "./node_modules/moment/moment.js");
-/* harmony import */ var moment__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(moment__WEBPACK_IMPORTED_MODULE_2__);
-/* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @angular/core */ "./node_modules/@angular/core/fesm5/core.js");
+/* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @angular/core */ "./node_modules/@angular/core/fesm5/core.js");
+/* harmony import */ var dexie__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! dexie */ "./node_modules/dexie/dist/dexie.es.js");
+/* harmony import */ var moment__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! moment */ "./node_modules/moment/moment.js");
+/* harmony import */ var moment__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(moment__WEBPACK_IMPORTED_MODULE_3__);
 
 
 
@@ -60339,7 +60339,7 @@ var Day = /** @class */ (function () {
         this.meals = meals;
         this.id = id;
         if (typeof date === 'number') {
-            this.date = moment__WEBPACK_IMPORTED_MODULE_2__(date);
+            this.date = moment__WEBPACK_IMPORTED_MODULE_3__(date);
         }
         else {
             this.date = date;
@@ -60357,14 +60357,14 @@ var Day = /** @class */ (function () {
     Day.prototype.protein = function () {
         return this.meals.reduce(function (a, m) { return a + m.protein(); }, 0);
     };
-    Day.prototype.forDb = function () {
+    Day.prototype.toJson = function () {
         var ret = {
-            date: +this.date
+            date: +this.date,
+            meals: this.meals,
         };
         if (this.id) {
             ret.id = this.id;
         }
-        ;
         return ret;
     };
     return Day;
@@ -60420,17 +60420,6 @@ var Meal = /** @class */ (function () {
                 return short ? '?' : 'Unknown';
         }
     };
-    Meal.prototype.forDb = function () {
-        var ret = {
-            name: this.name,
-            time: this.time,
-            dayId: this.dayId,
-        };
-        if (this.id) {
-            ret.id = this.id;
-        }
-        return ret;
-    };
     return Meal;
 }());
 
@@ -60453,8 +60442,8 @@ var Database = /** @class */ (function (_super) {
     tslib__WEBPACK_IMPORTED_MODULE_0__["__extends"](Database, _super);
     function Database(vers) {
         var _this = _super.call(this, 'nutrition-data') || this;
-        _this.syncableChanges = new _angular_core__WEBPACK_IMPORTED_MODULE_3__["EventEmitter"]();
-        _this.renderableChanges = new _angular_core__WEBPACK_IMPORTED_MODULE_3__["EventEmitter"]();
+        _this.syncableChanges = new _angular_core__WEBPACK_IMPORTED_MODULE_1__["EventEmitter"]();
+        _this.renderableChanges = new _angular_core__WEBPACK_IMPORTED_MODULE_1__["EventEmitter"]();
         _this.version(1).stores({
             foods: '++id,desc,manufacturer',
             weights: 'id,foodDescId,measurementDesc',
@@ -60506,15 +60495,14 @@ var Database = /** @class */ (function (_super) {
             return tslib__WEBPACK_IMPORTED_MODULE_0__["__generator"](this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        debugger;
                         if (info.id) {
                             delete info.id;
                         }
                         if (!info.updated) {
-                            info.updated = +moment__WEBPACK_IMPORTED_MODULE_2__(); //unix ms timestamp
+                            info.updated = +moment__WEBPACK_IMPORTED_MODULE_3__(); // unix ms timestamp
                         }
-                        if (typeof info.updated != 'number') {
-                            info.updated = +info.updated; //unix ms timestamp
+                        if (typeof info.updated !== 'number') {
+                            info.updated = +info.updated; // unix ms timestamp
                         }
                         return [4 /*yield*/, this.users.put(info)];
                     case 1:
@@ -60543,15 +60531,23 @@ var Database = /** @class */ (function (_super) {
      */
     Database.prototype.getUserHistory = function () {
         return tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"](this, void 0, void 0, function () {
+            var fromDb;
             return tslib__WEBPACK_IMPORTED_MODULE_0__["__generator"](this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.users.orderBy('updated').reverse().limit(50).toArray()];
-                    case 1: return [2 /*return*/, (_a.sent()).map(function (u) {
-                            if (u.updated) {
-                                u.updated = moment__WEBPACK_IMPORTED_MODULE_2__(u.updated);
-                            }
-                            return u;
-                        })];
+                    case 0: return [4 /*yield*/, this.users
+                            .orderBy('updated')
+                            .reverse()
+                            .limit(50)
+                            .and(function (b) { return !b.deleted; })
+                            .toArray()];
+                    case 1:
+                        fromDb = _a.sent();
+                        return [2 /*return*/, fromDb.map(function (u) {
+                                if (u.updated) {
+                                    u.updated = moment__WEBPACK_IMPORTED_MODULE_3__(u.updated);
+                                }
+                                return u;
+                            })];
                 }
             });
         });
@@ -60562,10 +60558,15 @@ var Database = /** @class */ (function (_super) {
      */
     Database.prototype.removeUserEntry = function (id) {
         return tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"](this, void 0, void 0, function () {
+            var fromDb;
             return tslib__WEBPACK_IMPORTED_MODULE_0__["__generator"](this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.users.delete(id)];
+                    case 0: return [4 /*yield*/, this.users.get(id)];
                     case 1:
+                        fromDb = _a.sent();
+                        fromDb.deleted = true;
+                        return [4 /*yield*/, this.users.put(fromDb)];
+                    case 2:
                         _a.sent();
                         this.syncableChanges.emit();
                         return [2 /*return*/];
@@ -60575,12 +60576,14 @@ var Database = /** @class */ (function (_super) {
     };
     Database.prototype.removeMeal = function (id) {
         return tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"](this, void 0, void 0, function () {
+            var fromDb;
             return tslib__WEBPACK_IMPORTED_MODULE_0__["__generator"](this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.meals.delete(id)];
+                    case 0: return [4 /*yield*/, this.meals.get(id)];
                     case 1:
-                        _a.sent();
-                        return [4 /*yield*/, this.mealItems.where('mealId').equals(id).delete()];
+                        fromDb = _a.sent();
+                        fromDb.deleted = true;
+                        return [4 /*yield*/, this.meals.put(fromDb)];
                     case 2:
                         _a.sent();
                         this.syncableChanges.emit();
@@ -60595,7 +60598,7 @@ var Database = /** @class */ (function (_super) {
     Database.prototype.getTodaysEntries = function () {
         return tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"](this, void 0, void 0, function () {
             return tslib__WEBPACK_IMPORTED_MODULE_0__["__generator"](this, function (_a) {
-                return [2 /*return*/, this.getMealsForDay(moment__WEBPACK_IMPORTED_MODULE_2__())];
+                return [2 /*return*/, this.getMealsForDay(moment__WEBPACK_IMPORTED_MODULE_3__())];
             });
         });
     };
@@ -60616,6 +60619,7 @@ var Database = /** @class */ (function (_super) {
                         if (!!day) return [3 /*break*/, 3];
                         day = {
                             date: dt,
+                            deleted: false,
                         };
                         return [4 /*yield*/, this.days.put(day)];
                     case 2:
@@ -60631,7 +60635,7 @@ var Database = /** @class */ (function (_super) {
             var dbMeals, ret, i, dbMeal, dbContents, contents;
             return tslib__WEBPACK_IMPORTED_MODULE_0__["__generator"](this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.meals.where('dayId').equals(day.id).toArray()];
+                    case 0: return [4 /*yield*/, this.meals.where('dayId').equals(day.id).and(function (d) { return !d.deleted; }).toArray()];
                     case 1:
                         dbMeals = _a.sent();
                         ret = new Day(day.date, new Array(dbMeals.length), day.id);
@@ -60646,7 +60650,9 @@ var Database = /** @class */ (function (_super) {
                                 .toArray()];
                     case 3:
                         dbContents = _a.sent();
-                        contents = dbContents.map(function (dbItem) { return new MealItem(dbItem.name, dbItem.calories, dbItem.carbs, dbItem.protein, dbItem.fat, dbItem.mealId, dbItem.id); });
+                        contents = dbContents.map(function (dbItem) {
+                            return new MealItem(dbItem.name, dbItem.calories, dbItem.carbs, dbItem.protein, dbItem.fat, dbItem.mealId, dbItem.id);
+                        });
                         ret.meals[i] = new Meal(dbMeal.name, dbMeal.time, contents, day.id, dbMeal.id);
                         _a.label = 4;
                     case 4:
@@ -60704,7 +60710,7 @@ var Database = /** @class */ (function (_super) {
                         if ((_a.sent()) > 0) {
                             this.seeds.clear();
                         }
-                        return [4 /*yield*/, this.seeds.add({ when: moment__WEBPACK_IMPORTED_MODULE_2__().toISOString(), state: 'start' })];
+                        return [4 /*yield*/, this.seeds.add({ when: moment__WEBPACK_IMPORTED_MODULE_3__().toISOString(), state: 'start' })];
                     case 2:
                         _a.sent();
                         return [4 /*yield*/, this.seedTable(this.foods, 'food_details.json', updateCb)];
@@ -60713,7 +60719,7 @@ var Database = /** @class */ (function (_super) {
                         return [4 /*yield*/, this.seedTable(this.weights, 'weight.json', updateCb)];
                     case 4:
                         _a.sent();
-                        return [4 /*yield*/, this.seeds.add({ when: moment__WEBPACK_IMPORTED_MODULE_2__().toISOString(), state: 'complete' })];
+                        return [4 /*yield*/, this.seeds.add({ when: moment__WEBPACK_IMPORTED_MODULE_3__().toISOString(), state: 'complete' })];
                     case 5:
                         _a.sent();
                         return [3 /*break*/, 7];
@@ -60845,7 +60851,7 @@ var Database = /** @class */ (function (_super) {
     Database.prototype.importArchive = function (archive, syncable) {
         if (syncable === void 0) { syncable = true; }
         return tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"](this, void 0, void 0, function () {
-            var result, _i, _a, day, date, existingDay, newDayId, _b, _c, meal, existingMeal, newMealId, _d, _e, item, existingItem, i, _f, _g, body, existingBody, newBody;
+            var result, _i, _a, day, existingDay, _b, _c, meal, existingMeal, toInsert, _d, _e, item, existingItem, i, _f, _g, body, existingBody;
             return tslib__WEBPACK_IMPORTED_MODULE_0__["__generator"](this, function (_h) {
                 switch (_h.label) {
                     case 0:
@@ -60858,98 +60864,93 @@ var Database = /** @class */ (function (_super) {
                         _i = 0, _a = archive.mealHistory;
                         _h.label = 1;
                     case 1:
-                        if (!(_i < _a.length)) return [3 /*break*/, 17];
+                        if (!(_i < _a.length)) return [3 /*break*/, 15];
                         day = _a[_i];
-                        date = typeof day.date === 'number' ? day.date : +day.date;
                         return [4 /*yield*/, this.days.where('id').equals(day.id).first()];
                     case 2:
                         existingDay = _h.sent();
-                        newDayId = void 0;
-                        if (!existingDay) return [3 /*break*/, 3];
-                        newDayId = existingDay.id;
-                        return [3 /*break*/, 5];
-                    case 3: return [4 /*yield*/, this.days.put({ date: date })];
-                    case 4:
-                        newDayId = _h.sent();
+                        if (!!existingDay) return [3 /*break*/, 4];
+                        return [4 /*yield*/, this.days.put({
+                                id: day.id,
+                                date: day.date,
+                                deleted: day.deleted
+                            })];
+                    case 3:
+                        _h.sent();
                         result.days++;
+                        _h.label = 4;
+                    case 4:
+                        _b = 0, _c = day.meals;
                         _h.label = 5;
                     case 5:
-                        _b = 0, _c = day.meals;
-                        _h.label = 6;
-                    case 6:
-                        if (!(_b < _c.length)) return [3 /*break*/, 16];
+                        if (!(_b < _c.length)) return [3 /*break*/, 14];
                         meal = _c[_b];
                         return [4 /*yield*/, this.meals.where('id')
                                 .equals(meal.id)
                                 .first()];
-                    case 7:
+                    case 6:
                         existingMeal = _h.sent();
-                        newMealId = void 0;
-                        if (!existingMeal) return [3 /*break*/, 8];
-                        newMealId = existingMeal.id;
-                        return [3 /*break*/, 10];
+                        if (!!existingMeal) return [3 /*break*/, 8];
+                        toInsert = {
+                            id: meal.id,
+                            time: meal.time,
+                            dayId: day.id,
+                            name: meal.name,
+                            deleted: meal.deleted
+                        };
+                        return [4 /*yield*/, this.meals.put(toInsert)];
+                    case 7:
+                        _h.sent();
+                        result.meals++;
+                        _h.label = 8;
                     case 8:
-                        result.meals++;
-                        return [4 /*yield*/, this.meals.put({
-                                dayId: newDayId,
-                                name: meal.name,
-                                time: meal.time,
-                            })];
+                        _d = 0, _e = meal.items;
+                        _h.label = 9;
                     case 9:
-                        newMealId = _h.sent();
-                        result.meals++;
-                        _h.label = 10;
-                    case 10:
-                        _d = 0, _e = meal.contents;
-                        _h.label = 11;
-                    case 11:
-                        if (!(_d < _e.length)) return [3 /*break*/, 15];
+                        if (!(_d < _e.length)) return [3 /*break*/, 13];
                         item = _e[_d];
                         return [4 /*yield*/, this.mealItems
                                 .where('id')
                                 .equals(item.id)
                                 .first()];
-                    case 12:
+                    case 10:
                         existingItem = _h.sent();
-                        if (!!existingItem) return [3 /*break*/, 14];
+                        if (!!existingItem) return [3 /*break*/, 12];
                         i = Object.assign({}, item);
-                        delete i.id;
-                        i.mealId = newMealId;
+                        i.mealId = meal.id;
                         return [4 /*yield*/, this.mealItems.put(i)];
-                    case 13:
+                    case 11:
                         _h.sent();
                         result.items++;
-                        _h.label = 14;
-                    case 14:
+                        _h.label = 12;
+                    case 12:
                         _d++;
-                        return [3 /*break*/, 11];
-                    case 15:
+                        return [3 /*break*/, 9];
+                    case 13:
                         _b++;
-                        return [3 /*break*/, 6];
-                    case 16:
+                        return [3 /*break*/, 5];
+                    case 14:
                         _i++;
                         return [3 /*break*/, 1];
-                    case 17:
+                    case 15:
                         _f = 0, _g = archive.bodyHistory;
-                        _h.label = 18;
-                    case 18:
-                        if (!(_f < _g.length)) return [3 /*break*/, 22];
+                        _h.label = 16;
+                    case 16:
+                        if (!(_f < _g.length)) return [3 /*break*/, 20];
                         body = _g[_f];
                         return [4 /*yield*/, this.users.where('id').equals(body.id).first()];
-                    case 19:
+                    case 17:
                         existingBody = _h.sent();
-                        if (!!existingBody) return [3 /*break*/, 21];
-                        newBody = Object.assign({}, body);
-                        delete newBody.id;
-                        return [4 /*yield*/, this.users.put(newBody)];
-                    case 20:
+                        if (!!existingBody) return [3 /*break*/, 19];
+                        return [4 /*yield*/, this.users.put(body)];
+                    case 18:
                         _h.sent();
                         result.body++;
-                        _h.label = 21;
-                    case 21:
+                        _h.label = 19;
+                    case 19:
                         _f++;
-                        return [3 /*break*/, 18];
-                    case 22:
+                        return [3 /*break*/, 16];
+                    case 20:
                         if (syncable) {
                             this.syncableChanges.emit();
                         }
@@ -61000,7 +61001,7 @@ var Database = /** @class */ (function (_super) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.dropboxHash.add({
                             fileHash: changes.fileHash,
-                            timestamp: +moment__WEBPACK_IMPORTED_MODULE_2__(changes.fileModified),
+                            timestamp: +moment__WEBPACK_IMPORTED_MODULE_3__(changes.fileModified),
                         })];
                     case 1:
                         _a.sent();
@@ -61010,7 +61011,7 @@ var Database = /** @class */ (function (_super) {
         });
     };
     return Database;
-}(dexie__WEBPACK_IMPORTED_MODULE_1__["default"]));
+}(dexie__WEBPACK_IMPORTED_MODULE_2__["default"]));
 
 
 
