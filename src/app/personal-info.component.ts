@@ -47,7 +47,7 @@ export class PersonalInfoComponent {
     }
     async saveInfo() {
         const user = this.infoAsUser();
-        const firstMissing = Object.getOwnPropertyNames(user).find(name => name !== 'id' && !user[name]);
+        const firstMissing = Object.getOwnPropertyNames(user).find(name => name !== 'id' && user[name] === undefined);
         if (firstMissing) {
             return this.messenger.send(`${normalizeString(firstMissing)} is required`, true);
         }
