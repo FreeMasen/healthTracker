@@ -46,6 +46,11 @@ export class AppComponent {
         console.log('json', json);
         let b = new Blob([json], {type: 'text/json'});
         let url = URL.createObjectURL(b);
+        let loweredUA = window.navigator.userAgent.toLocaleLowerCase();
+        if (loweredUA.indexOf('ios') > -1
+            || loweredUA.indexOf('android') > -1) {
+            window.open(url, '_blank');
+        } else {
         let link = document.createElement('a');
         console.log('url', url);
         link.setAttribute('href', url);
