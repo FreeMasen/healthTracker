@@ -1,22 +1,18 @@
 import { Injectable } from '@angular/core';
-import { Database, IFoodDesc, IFoodDetail, IUser, IMeal, Day, MealItem, Meal, MealName, ITime, IDay} from './database';
 import * as moment from 'moment';
+import { Database, IDay, IMeal, ITime, Meal, MealItem, MealName } from './database';
 
 
-export { IFoodDesc, IFoodDetail, IDay, 
-        IFoodGroup, INutrient, 
-        INutritionData, INutritionDefinition, IUser, 
-        IWeightInfo, ActivityLevel, Day,
-        Meal, MealName, MealItem
-
+export { ActivityLevel, Day, IDay, IFoodDesc, IFoodDetail,
+     IFoodGroup, INutrient, INutritionData, INutritionDefinition,
+     IUser, IWeightInfo, Meal, MealItem, MealName,
 } from './database';
-
 
 @Injectable({
     providedIn: 'root',
 })
 export class Data extends Database {
-    
+
     constructor() {
         super(1);
         (window as any).db = this;
@@ -43,14 +39,14 @@ export class Data extends Database {
         if (!dbMeal) {
             throw new Error('No meal found');
         }
-        let items = await this.mealItems.where('mealId').equals(dbMeal.id).toArray();
-        let mealItems = items.map(i => new MealItem(i.name, i.calories, i.carbs, i.protein, i.fat, i.mealId, i.id));
+        const items = await this.mealItems.where('mealId').equals(dbMeal.id).toArray();
+        const mealItems = items.map(i => new MealItem(i.name, i.calories, i.carbs, i.protein, i.fat, i.mealId, i.id));
         return new Meal(dbMeal.name as MealName, dbMeal.time, mealItems, dbMeal.dayId, dbMeal.id);
     }
 
     async updateMeal(id: string, date: moment.Moment, name: MealName, items: MealItem[]) {
         console.log('updateMeal', id, date.toLocaleString(), name, items);
-        let dayDate = date.clone();
+        const dayDate = date.clone();
         dayDate.startOf('day');
         let day: IDay;
         try {
@@ -63,26 +59,26 @@ export class Data extends Database {
             try {
                 dayId = await this.days.put({
                     date: +dayDate,
-                })
+                });
             } catch (e) {
                 return console.error('Failed to insert non-existent day', dayDate.toLocaleString());
             }
         } else {
             dayId = day.id;
         }
-        let time: ITime = {
+        const time: ITime = {
             hours: date.hours(),
             minutes: date.minutes(),
         };
-        let iMeal = {
+        const iMeal = {
             id,
             dayId,
             name,
             time,
         };
         await this.meals.put(iMeal);
-        let itemIds = items.map(i => i.id).filter(id => id);
-        let toBeDeleted = await this.mealItems.where('mealId').equals(id).and(item => itemIds.indexOf(item.id) < 0).primaryKeys();
+        const itemIds = items.map(i => i.id).filter(id => id);
+        const toBeDeleted = await this.mealItems.where('mealId').equals(id).and(item => itemIds.indexOf(item.id) < 0).primaryKeys();
         await this.mealItems.bulkDelete(toBeDeleted);
         await this.mealItems.bulkPut(items.map(item => {
             item.mealId = id;
@@ -93,7 +89,7 @@ export class Data extends Database {
     }
 
     async addMeal(date: moment.Moment, name: string, contents: MealItem[]) {
-        let dayDate = date.clone().startOf('day');
+        const dayDate = date.clone().startOf('day');
         let day: IDay;
         try {
             day = await this.days.where('date').equals(+dayDate).first();
@@ -105,7 +101,7 @@ export class Data extends Database {
             try {
                 dayId = await this.days.put({
                     date: +dayDate,
-                })
+                });
 
             } catch (e) {
                 return console.error('Failed to insert non-existent day', dayDate.toLocaleString());
@@ -113,12 +109,12 @@ export class Data extends Database {
         } else {
             dayId = day.id;
         }
-        let time: ITime = {
+        const time: ITime = {
             hours: date.hours(),
             minutes: date.minutes(),
-        }
+        };
         let mealId: string;
-        let iMeal = {
+        const iMeal = {
             dayId,
             name,
             time,
@@ -128,7 +124,7 @@ export class Data extends Database {
         } catch (e) {
             return console.error('Failed to insert new meal', iMeal);
         }
-        for (let item of contents) {
+        for (const item of contents) {
             item.mealId = mealId;
             try {
                 await this.mealItems.put(item);
