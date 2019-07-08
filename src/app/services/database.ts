@@ -1,5 +1,7 @@
 import Dexie from 'dexie';
 import * as moment from 'moment';
+import { IDropboxInfo, IDropboxChanges } from './sync';
+import { EventEmitter } from '@angular/core';
 const DAY_FORMAT = 'YYYY/MM/DD';
 
 export const ENERGY_ID = 208;
@@ -54,7 +56,7 @@ export interface IWeightInfo {
 }
 
 export interface IUser {
-    id?: number;
+    id?: string;
     bodyFatPercentage: number;
     weight: number;
     height: number;
@@ -65,14 +67,14 @@ export interface IUser {
 }
 
 export interface IDay {
-    id?: number;
+    id?: string;
     date: number;
 }
 
 export interface IMeal {
-    id?: number;
+    id?: string;
     time: ITime;
-    dayId: number;
+    dayId: string;
     name: string;
 }
 
@@ -136,7 +138,7 @@ export class Day {
     constructor(
         date: moment.Moment | number,
         public meals: Meal[],
-        public id?: number,
+        public id?: string,
     ) {
         if (typeof date === 'number') {
             this.date = moment(date);
@@ -182,8 +184,8 @@ export class Meal {
         public name: MealName,
         public time: ITime,
         public contents: MealItem[],
-        public dayId?: number,
-        public id?: number,
+        public dayId?: string,
+        public id?: string,
     ) { }
 
     calories(): number {
@@ -215,6 +217,22 @@ export class Meal {
         let minutes = `0${this.time.minutes}`.substr(-2);
         return `${hours}:${minutes} ${suffix}`;
     }
+    formattedName(short: boolean): string {
+        switch (this.name) {
+            case MealName.Breakfast:
+                return short ? 'B' : this.name;
+            case MealName.Lunch:
+                return short ? 'L' : this.name;
+            case MealName.Dinner:
+                return short ? 'D' : this.name;
+            case MealName.Snack:
+                return short ? 'S' : this.name;
+            case MealName.Tea:
+                return short ? 'T' : this.name;
+            default:
+                return short ? '?' : 'Unknown';
+        }
+    }
     forDb(): IMeal {
         let ret: IMeal = {
             name: this.name,
@@ -230,40 +248,52 @@ export class Meal {
 
 
 export class MealItem {
-    public id?: number;
+    public id?: string;
     constructor(
         public name: string,
         public calories: number,
         public carbs?: number,
         public protein?: number,
         public fat?: number,
-        public mealId?: number,
-        id?: number,
+        public mealId?: string,
+        id?: string,
     ) { 
         if (id) {
             this.id = id;
         }
     }
 }
-
+interface IDbDropboxChanges {
+    id?: string;
+    timestamp: number;
+    fileHash: string;
+}
 export class Database extends Dexie {
+    public syncableChanges = new EventEmitter<void>();
+    public renderableChanges = new EventEmitter<void>();
+
     public foods: Dexie.Table<IFoodDesc, number>;
     public weights: Dexie.Table<IWeightInfo, number>;
     public seeds: Dexie.Table<{id?: number, when: string, state: string}, number>;
-    public users: Dexie.Table<IUser, number>;
-    public days: Dexie.Table<IDay, number>;
-    public meals: Dexie.Table<IMeal, number>;
-    public mealItems: Dexie.Table<MealItem, number>
-    constructor() {
+    public users: Dexie.Table<IUser, string>;
+    public days: Dexie.Table<IDay, string>;
+    public meals: Dexie.Table<IMeal, string>;
+    public mealItems: Dexie.Table<MealItem, string>;
+    public dropboxInfo: Dexie.Table<IDropboxInfo, string>;
+    public dropboxHash: Dexie.Table<IDbDropboxChanges, string>;
+
+    constructor(vers: number) {
         super('nutrition-data');
         this.version(1).stores({
             foods: '++id,desc,manufacturer',
             weights: 'id,foodDescId,measurementDesc',
             seeds: '++id,when,state',
-            users: '++id,updated',
-            days: '++id,date',
-            meals: '++id,dayId,name,time',
-            mealItems: '++id,name,mealId',
+            users: '$$id,updated',
+            days: '$$id,date',
+            meals: '$$id,dayId,name,time',
+            mealItems: '$$id,name,mealId',
+            dropboxInfo: '$$id',
+            dropboxHash: '$$id,timestamp'
         });
     }
     /**
@@ -285,6 +315,7 @@ export class Database extends Dexie {
      * @param user The user information to add
      */
     async addUser(info: IUser) {
+        debugger;
         if (info.id) {
             delete info.id;
         }
@@ -295,6 +326,7 @@ export class Database extends Dexie {
             info.updated = +info.updated; //unix ms timestamp
         }
         await this.users.put(info);
+        this.renderableChanges.emit();
     }
     /**
      * Get the last entry for the user's history
@@ -317,13 +349,15 @@ export class Database extends Dexie {
      * Remove a single history entry
      * @param id The ID of the entry to be removed
      */
-    async removeUserEntry(id: number) {
-        await this.users.delete(id)
+    async removeUserEntry(id: string) {
+        await this.users.delete(id);
+        this.syncableChanges.emit();
     }
 
-    async removeMeal(id: number) {
+    async removeMeal(id: string) {
         await this.meals.delete(id);
         await this.mealItems.where('mealId').equals(id).delete();
+        this.syncableChanges.emit();
     }
     /**
      * Get today's consumed information
@@ -372,6 +406,7 @@ export class Database extends Dexie {
         let foods = await this.mealItems
                         .where('name')
                         .startsWithIgnoreCase(term)
+                        .distinct()
                         .sortBy('name');
         return foods.map(f => new MealItem(f.name, f.calories, f.carbs, f.protein, f.fat, null, f.id))
     }
@@ -454,7 +489,7 @@ export class Database extends Dexie {
         }
     }
 
-    async importArchive(archive: IArchive) {
+    async importArchive(archive: IArchive, syncable: boolean = true) {
         let result = {
             days: 0,
             meals: 0,
@@ -463,8 +498,8 @@ export class Database extends Dexie {
         };  
         for (let day of archive.mealHistory) {
             let date = typeof day.date === 'number' ? day.date : +day.date;
-            let existingDay = await this.days.where('date').equals(date).first()
-            let newDayId: number;
+            let existingDay = await this.days.where('id').equals(day.id).first();
+            let newDayId: string;
             if (existingDay) {
                 newDayId = existingDay.id;
             } else {
@@ -472,8 +507,10 @@ export class Database extends Dexie {
                 result.days++
             }
             for (let meal of day.meals) {
-                let existingMeal = await this.meals.where('dayId').equals(newDayId).and(m => m.name == meal.name && m.time == meal.time).first();
-                let newMealId: number;
+                let existingMeal = await this.meals.where('id')
+                    .equals(meal.id)
+                    .first();
+                let newMealId: string;
                 if (existingMeal) {
                     newMealId = existingMeal.id
                 } else {
@@ -486,7 +523,10 @@ export class Database extends Dexie {
                     result.meals++
                 }
                 for (let item of meal.contents) {
-                    let existingItem = await this.mealItems.where('mealId').equals(newMealId).and(i => i.name == item.name).first();
+                    let existingItem = await this.mealItems
+                        .where('id')
+                        .equals(item.id)
+                        .first();
                     if (!existingItem) {
                         let i = Object.assign({}, item);
                         delete i.id;
@@ -498,8 +538,7 @@ export class Database extends Dexie {
             }
         }
         for (let body of archive.bodyHistory) {
-            let updated = typeof body.updated === 'number' ? body.updated : +moment(body.updated);
-            let existingBody = await this.users.where('updated').equals(updated).first();
+            let existingBody = await this.users.where('id').equals(body.id).first();
             if (!existingBody) {
                 let newBody = Object.assign({}, body);
                 delete newBody.id;
@@ -507,6 +546,31 @@ export class Database extends Dexie {
                 result.body++;
             }
         }
+        if (syncable) {
+            this.syncableChanges.emit();
+        }
+        this.renderableChanges.emit();
         return result;
+    }
+
+    public async addDropBoxInfo(info: IDropboxInfo) {
+        await this.dropboxInfo.add(info);
+    }
+
+    public async getDropBoxInfo(): Promise<IDropboxInfo> {
+        return this.dropboxInfo.limit(1).first();
+    }
+    public async getLastDropboxHash(): Promise<string> {
+        let record = await this.dropboxHash.orderBy('timestamp').reverse().limit(1).first();
+        if (!record) {
+            return null;
+        }
+        return record.fileHash;
+    }
+    public async saveDropboxChanges(changes: IDropboxChanges) {
+        await this.dropboxHash.add({
+            fileHash: changes.fileHash,
+            timestamp: +moment(changes.fileModified),
+        });
     }
 }

@@ -8,10 +8,12 @@ import { timeToTime } from './services/util';
 import { Observable } from 'rxjs';
 import { debounceTime, switchMap, } from 'rxjs/operators';
 import { MatAutocomplete } from '@angular/material';
+import { Sync } from './services/sync';
 
 @Component({
     selector: 'add-meal',
     templateUrl: './add-meal.html',
+    styleUrls: ['./add-meal.scss']
 })
 export class AddMealComponent {
     mealName: MealName = MealName.Breakfast;
@@ -72,7 +74,7 @@ export class AddMealComponent {
                 }, {emitEvent: false, onlySelf: true});
             });
         });
-        let id = +this.route.snapshot.paramMap.get('id');
+        let id = this.route.snapshot.paramMap.get('id');
         if (id) {
             console.log('getting info from db');
             let meal;
@@ -107,7 +109,14 @@ export class AddMealComponent {
             return [];
         }
         let result = await this.data.findFood(v);
-        return result;
+        return result.reduce((acc, v) => {
+            if (acc.known.has(v.name)) {
+                return acc;
+            }
+            acc.known.add(v.name);
+            acc.ret.push(v);
+            return acc;
+        }, {ret: [], known: new Set()}).ret
     }
 
     addMealItem() {
@@ -121,7 +130,7 @@ export class AddMealComponent {
     }
 
     saveMeal() {
-        let id = +this.route.snapshot.paramMap.get('id');
+        let id = this.route.snapshot.paramMap.get('id');
         if (id) {
             this.data.updateMeal(id, this.mealDate, this.mealName, this.items).then(() => {
                 this.router.navigate(['/']);

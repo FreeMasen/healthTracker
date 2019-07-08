@@ -29,3 +29,12 @@ export function timeToTime(time: string): ITime {
         minutes,
     }
 }
+
+export async function readFile(f: File): Promise<string> {
+    return new Promise((r,j) => {
+        let reader = new FileReader();
+        reader.onerror = e => j(e);
+        reader.onload = s => r(reader.result as string);
+        reader.readAsText(f);
+    });
+}

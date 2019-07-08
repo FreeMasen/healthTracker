@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { Database, IFoodDesc, IFoodDetail, IUser, IMeal, Day, MealItem, Meal, MealName, ITime, IDay} from './database';
 import * as moment from 'moment';
 
+
 export { IFoodDesc, IFoodDetail, IDay, 
         IFoodGroup, INutrient, 
         INutritionData, INutritionDefinition, IUser, 
@@ -15,8 +16,9 @@ export { IFoodDesc, IFoodDetail, IDay,
     providedIn: 'root',
 })
 export class Data extends Database {
+    
     constructor() {
-        super();
+        super(1);
         (window as any).db = this;
     }
     /**
@@ -29,7 +31,7 @@ export class Data extends Database {
         ];
     }
 
-    async getMeal(id: number): Promise<Meal> {
+    async getMeal(id: string): Promise<Meal> {
         console.log('getMeal', id);
         let dbMeal: IMeal;
         try {
@@ -46,7 +48,7 @@ export class Data extends Database {
         return new Meal(dbMeal.name as MealName, dbMeal.time, mealItems, dbMeal.dayId, dbMeal.id);
     }
 
-    async updateMeal(id: number, date: moment.Moment, name: MealName, items: MealItem[]) {
+    async updateMeal(id: string, date: moment.Moment, name: MealName, items: MealItem[]) {
         console.log('updateMeal', id, date.toLocaleString(), name, items);
         let dayDate = date.clone();
         dayDate.startOf('day');
@@ -56,7 +58,7 @@ export class Data extends Database {
         } catch (e) {
             console.error('Failed to get day from date', dayDate.toLocaleString());
         }
-        let dayId: number;
+        let dayId: string;
         if (!day) {
             try {
                 dayId = await this.days.put({
@@ -86,6 +88,8 @@ export class Data extends Database {
             item.mealId = id;
             return item;
         }));
+        this.renderableChanges.emit();
+        this.syncableChanges.emit();
     }
 
     async addMeal(date: moment.Moment, name: string, contents: MealItem[]) {
@@ -96,7 +100,7 @@ export class Data extends Database {
         } catch (e) {
             console.error('Failed to get day from date', dayDate.toLocaleString());
         }
-        let dayId: number;
+        let dayId: string;
         if (!day) {
             try {
                 dayId = await this.days.put({
@@ -113,7 +117,7 @@ export class Data extends Database {
             hours: date.hours(),
             minutes: date.minutes(),
         }
-        let mealId: number;
+        let mealId: string;
         let iMeal = {
             dayId,
             name,
@@ -132,5 +136,7 @@ export class Data extends Database {
                 return console.error('failed to insert mealItem', item);
             }
         }
+        this.renderableChanges.emit();
+        this.syncableChanges.emit();
     }
 }

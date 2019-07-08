@@ -18,14 +18,18 @@ export class DashboardComponent {
     async ngOnInit() {
         this.history = await this.data.getUserHistory();
         this.today = await this.data.getTodaysEntries();
+        this.data.renderableChanges.subscribe(async () => {
+            this.history = await this.data.getUserHistory();
+            this.today = await this.data.getMealsForDay(this.today.date);
+        })
     }
-    remoteEntry(id: number) {
+    remoteEntry(id: string) {
         this.data.removeUserEntry(id).then(() => {
             this.history = this.history.filter(e => e.id != id);
         });
     }
 
-    removeMeal(id: number) {
+    removeMeal(id: string) {
         this.data.removeMeal(id).then(() => {
             let newMeals = this.today.meals.filter(m => m.id != id);
             this.today = new Day(this.today.date, newMeals, this.today.id);
@@ -59,6 +63,74 @@ export class DashboardComponent {
         if (this.today.date.isSame(moment().startOf('day'))) {
             return 'Today';
         }
+        if (Math.max(document.documentElement.clientWidth, window.innerWidth || 0) < 550) {
+            return this.today.date.format('M/D/YY');
+        }
         return this.today.date.format('ddd MMM Do, YYYY');
     }
+
+    formatBodyDate(date: moment.Moment): string {
+        if (this.smallScreen()) {
+            return date.format('M/D/YY');
+        }
+        return date.format('MMM DD, YYYY');
+    }
+    get descHeader(): string {
+        if (this.smallScreen()) {
+            return 'Desc';
+        }
+        return 'Description';
+    }
+    get calHeader(): string {
+        if (this.smallScreen()) {
+            return 'Cal';
+        }
+        return 'Calories';
+    }
+    
+    get carbsHeader(): string {
+        if (this.smallScreen()) {
+            return 'Car';
+        }
+        return 'Carbs';
+    }
+    get protHeader(): string {
+        if (this.smallScreen()) {
+            return 'Pro';
+        }
+        return 'Protein';
+    }
+
+    get ttlHeader(): string {
+        if (this.smallScreen()) {
+            return 'Ttl';
+        }
+        return 'Total';
+    }
+
+    get bfpHeader(): string {
+        if (this.smallScreen()) {
+            return 'BF%';
+        }
+        return 'Body Fat %';
+    }
+
+    get weightHeader(): string {
+        if (this.smallScreen()) {
+            return 'Lbs';
+        }
+        return 'Weight';
+    }
+
+    get fixedWidth(): number {
+        if (this.smallScreen()) {
+            return 0;
+        }
+        return 2;
+    }
+
+    smallScreen(): boolean {
+        return Math.max(document.documentElement.clientWidth, window.innerWidth || 0) < 550
+    }
 }
+

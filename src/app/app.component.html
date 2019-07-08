@@ -1,28 +1,8 @@
 <mat-toolbar class="header" color="primary" style="display: flex;flex-flow:row;justify-content:space-between;">
-  <!-- <mat-menu #appMenu="matMenu">
-    <button mat-menu-item routerLink="/dashboard">
-      <mat-icon>dashboard</mat-icon>
-      <span>Dashboard</span>
-    </button>
-    <button mat-menu-item routerLink="/search">
-      <mat-icon>search</mat-icon>
-      <span>Search Foods</span>
-    </button>
-    <button mat-menu-item routerLink="/add-food">
-      <mat-icon>add</mat-icon>
-      <span>Add Food</span>
-    </button>
-    <button mat-menu-item routerLink="/add-recipe">
-      <mat-icon>local_dining</mat-icon>
-      <span>Add Recipe</span>
-    </button>
-  </mat-menu>
-  <button mat-icon-button [matMenuTriggerFor]="appMenu">
-    <mat-icon>menu</mat-icon>
-  </button> -->
   <h1 routerLink="./" style="cursor:pointer;" title="Dashboard">Health Data Tracker</h1>
   <div style="display: flex;flex-flow:row;align-items:center;">
     <span routerLink="./about" style="cursor:pointer;">About</span>
+    <mat-icon (click)="goToSyncSetup()" style="cursor:pointer;margin-left:10px;">sync</mat-icon>
     <mat-icon (click)="download()" style="cursor:pointer;margin-left:10px;">get_app</mat-icon>
     <mat-icon routerLink="./import" style="cursor:pointer;margin-left:10px;" title="import from another device">call_merge</mat-icon>
   </div>

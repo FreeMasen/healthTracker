@@ -23074,17 +23074,30 @@ var MealItem = /** @class */ (function () {
 
 var Database = /** @class */ (function (_super) {
     tslib__WEBPACK_IMPORTED_MODULE_0__["__extends"](Database, _super);
-    function Database() {
+    function Database(vers) {
         var _this = _super.call(this, 'nutrition-data') || this;
-        _this.version(1).stores({
-            foods: '++id,desc,manufacturer',
-            weights: 'id,foodDescId,measurementDesc',
-            seeds: '++id,when,state',
-            users: '++id,updated',
-            days: '++id,date',
-            meals: '++id,dayId,name,time',
-            mealItems: '++id,name,mealId',
-        });
+        if (vers < 3) {
+            _this.version(1).stores({
+                foods: '++id,desc,manufacturer',
+                weights: 'id,foodDescId,measurementDesc',
+                seeds: '++id,when,state',
+                users: '++id,updated',
+                days: '++id,date',
+                meals: '++id,dayId,name,time',
+                mealItems: '++id,name,mealId',
+            });
+        }
+        else {
+            _this.version(3).stores({
+                foods: '$$id,desc,manufacturer',
+                weights: '$$,foodDescId,measurementDesc',
+                seeds: '$$id,when,state',
+                users: '$$id,updated',
+                days: '$$id,date',
+                meals: '$$id,dayId,name,time',
+                mealItems: '$$id,name,mealId',
+            });
+        }
         return _this;
     }
     /**
@@ -23608,7 +23621,7 @@ __webpack_require__.r(__webpack_exports__);
 /// <reference lib="webworker" />
 
 (function () {
-    var db = new _src_app_services_database__WEBPACK_IMPORTED_MODULE_0__["Database"]();
+    var db = new _src_app_services_database__WEBPACK_IMPORTED_MODULE_0__["Database"](1);
     db.seed(function (event, table, target, value) {
         postMessage({ event: event, table: table, target: target, value: value });
     }).then(function () {

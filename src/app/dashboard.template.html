@@ -16,9 +16,9 @@
     <mat-card-content >
         <mat-table style="width: 100%;" [dataSource]="today.meals">
                 <ng-container matColumnDef="name">
-                    <mat-header-cell *matHeaderCellDef> Description </mat-header-cell>
-                    <mat-cell *matCellDef="let meal"> {{meal.name}} </mat-cell>
-                    <mat-footer-cell *matFooterCellDef>Total</mat-footer-cell>
+                    <mat-header-cell *matHeaderCellDef> {{ descHeader }} </mat-header-cell>
+                    <mat-cell *matCellDef="let meal"> {{meal.formattedName(smallScreen())}} </mat-cell>
+                    <mat-footer-cell *matFooterCellDef>{{ttlHeader}}</mat-footer-cell>
                 </ng-container>
                 <ng-container matColumnDef="time">
                     <mat-header-cell *matHeaderCellDef> Time </mat-header-cell>
@@ -26,43 +26,43 @@
                     <mat-footer-cell *matFooterCellDef></mat-footer-cell>
                 </ng-container>
                 <ng-container matColumnDef="calories">
-                    <mat-header-cell *matHeaderCellDef> Calories </mat-header-cell>
+                    <mat-header-cell *matHeaderCellDef> {{calHeader}} </mat-header-cell>
                     <mat-cell *matCellDef="let meal"> {{meal.calories()}} </mat-cell>
                     <mat-footer-cell *matFooterCellDef>{{today.calories()}}</mat-footer-cell>
                 </ng-container>
                 <ng-container matColumnDef="carbs">
-                    <mat-header-cell *matHeaderCellDef> Carbs </mat-header-cell>
-                    <mat-cell *matCellDef="let meal"> {{meal.carbs().toFixed(2)}} </mat-cell>
-                    <mat-footer-cell *matFooterCellDef>{{today.carbs().toFixed(2)}}</mat-footer-cell>
+                    <mat-header-cell *matHeaderCellDef> {{carbsHeader}} </mat-header-cell>
+                    <mat-cell *matCellDef="let meal"> {{meal.carbs().toFixed(fixedWidth)}} </mat-cell>
+                    <mat-footer-cell *matFooterCellDef>{{today.carbs().toFixed(fixedWidth)}}</mat-footer-cell>
                 </ng-container>
                 <ng-container matColumnDef="fat">
                     <mat-header-cell *matHeaderCellDef> Fat </mat-header-cell>
-                    <mat-cell *matCellDef="let meal"> {{meal.fat().toFixed(2)}} </mat-cell>
-                    <mat-footer-cell *matFooterCellDef>{{today.fat().toFixed(2)}}</mat-footer-cell>
+                    <mat-cell *matCellDef="let meal"> {{meal.fat().toFixed(fixedWidth)}} </mat-cell>
+                    <mat-footer-cell *matFooterCellDef>{{today.fat().toFixed(fixedWidth)}}</mat-footer-cell>
                 </ng-container>
                 <ng-container matColumnDef="protein">
-                    <mat-header-cell *matHeaderCellDef> Protein </mat-header-cell>
-                    <mat-cell *matCellDef="let meal"> {{meal.protein().toFixed(2)}} </mat-cell>
-                    <mat-footer-cell *matFooterCellDef>{{today.protein().toFixed(2)}}</mat-footer-cell>
+                    <mat-header-cell *matHeaderCellDef> {{protHeader}} </mat-header-cell>
+                    <mat-cell *matCellDef="let meal"> {{meal.protein().toFixed(fixedWidth)}} </mat-cell>
+                    <mat-footer-cell *matFooterCellDef>{{today.protein().toFixed(fixedWidth)}}</mat-footer-cell>
                 </ng-container>
                 <ng-container matColumnDef="delete">
                     <mat-header-cell *matHeaderCellDef>
-                        <mat-icon style="padding-left: 13px;">delete</mat-icon>
+                        <mat-icon class="table-button-icon">delete</mat-icon>
                     </mat-header-cell>
                     <mat-cell *matCellDef="let meal">
-                        <button style="margin-left: 5px;" mat-mini-fab (click)="removeMeal(meal.id)">
-                            <mat-icon>delete</mat-icon>
+                        <button class="table-button" style="margin-left: 5px;" mat-mini-fab (click)="removeMeal(meal.id)">
+                            <mat-icon class="table-button-icon">delete</mat-icon>
                         </button>
                     </mat-cell>
                     <mat-footer-cell *matFooterCellDef></mat-footer-cell>
                 </ng-container>
                 <ng-container matColumnDef="edit">
                     <mat-header-cell *matHeaderCellDef>
-                        <mat-icon style="padding-left: 13px;">edit</mat-icon>
+                        <mat-icon class="table-button-icon">edit</mat-icon>
                     </mat-header-cell>
                     <mat-cell *matCellDef="let meal">
-                        <button style="margin-left: 5px;" mat-mini-fab routerLink="/meal/edit/{{meal.id}}">
-                            <mat-icon>edit</mat-icon>
+                        <button class="table-button" style="margin-left: 5px;" mat-mini-fab routerLink="/meal/edit/{{meal.id}}">
+                            <mat-icon class="table-button-icon">edit</mat-icon>
                         </button>
                     </mat-cell>
                     <mat-footer-cell *matFooterCellDef></mat-footer-cell>
@@ -80,37 +80,37 @@
 </mat-card>
 <mat-card style="margin-top: 5px;">
     <mat-card-title>Body History</mat-card-title>
-    <mat-card-content style="width: 100%;">
-        <mat-table style="width: 100%;max-height:500px;overflow-y:scroll;" [dataSource]="history">
+    <mat-card-content style="width: 100%;overflow-x: auto">
+        <mat-table [dataSource]="history" style="width: 100%;overflow-x: auto">
                 <ng-container matColumnDef="updated">
                     <mat-header-cell *matHeaderCellDef> Date </mat-header-cell>
-                    <mat-cell *matCellDef="let user"> {{user.updated.format('MMM DD, YYYY')}} </mat-cell>
+                    <mat-cell *matCellDef="let user"> {{formatBodyDate(user.updated)}} </mat-cell>
                 </ng-container>
                 <ng-container matColumnDef="weight">
-                    <mat-header-cell *matHeaderCellDef> Weight </mat-header-cell>
+                    <mat-header-cell *matHeaderCellDef> {{weightHeader}} </mat-header-cell>
                     <mat-cell *matCellDef="let user"> {{user.weight}} </mat-cell>
                 </ng-container>
                 <ng-container matColumnDef="bodyFatPercentage">
-                    <mat-header-cell *matHeaderCellDef> Body Fat % </mat-header-cell>
+                    <mat-header-cell *matHeaderCellDef> {{bfpHeader}} </mat-header-cell>
                     <mat-cell *matCellDef="let user"> {{user.bodyFatPercentage}}% </mat-cell>
                 </ng-container>
                 <ng-container matColumnDef="delete">
                     <mat-header-cell *matHeaderCellDef>
-                        <mat-icon style="margin-left: 13px;">delete</mat-icon>
+                        <mat-icon class="table-button-icon">delete</mat-icon>
                     </mat-header-cell>
                     <mat-cell *matCellDef="let user">
-                        <button style="margin-left: 5px;" mat-mini-fab (click)="remoteEntry(user.id)">
-                            <mat-icon>delete</mat-icon>
+                        <button class="table-button" mat-mini-fab (click)="remoteEntry(user.id)">
+                            <mat-icon class="table-button-icon">delete</mat-icon>
                         </button>
                     </mat-cell>
                 </ng-container>
                 <ng-container matColumnDef="edit">
                     <mat-header-cell *matHeaderCellDef>
-                        <mat-icon style="padding-left: 13px;">edit</mat-icon>
+                        <mat-icon class="table-button-icon">edit</mat-icon>
                     </mat-header-cell>
                     <mat-cell *matCellDef="let user">
-                        <button style="margin-left: 5px;" mat-mini-fab routerLink="personal-info/edit/{{user.id}}">
-                            <mat-icon>edit</mat-icon>
+                        <button class="table-button" mat-mini-fab routerLink="personal-info/edit/{{user.id}}">
+                            <mat-icon class="table-button-icon">edit</mat-icon>
                         </button>
                     </mat-cell>
                     <mat-footer-cell *matFooterCellDef></mat-footer-cell>

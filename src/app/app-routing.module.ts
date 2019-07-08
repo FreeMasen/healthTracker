@@ -8,6 +8,7 @@ import { PersonalInfoComponent } from './personal-info.component';
 import { AddMealComponent } from './add-meal.component';
 import { AboutComponent } from './about.component';
 import { ImportComponent } from './import.component';
+import { SyncSetupComponent } from './sync-setup.component';
 const routes: Routes = [
   {path: '', component: DashboardComponent},
   {path: 'search', component: SearchComponent},
@@ -19,6 +20,7 @@ const routes: Routes = [
   {path: 'meal/edit/:id', component: AddMealComponent},
   {path: 'about', component: AboutComponent},
   {path: 'import', component: ImportComponent},
+  {path: 'setup-sync', component: SyncSetupComponent},
   {path: '**', redirectTo: ''},
 ];
 

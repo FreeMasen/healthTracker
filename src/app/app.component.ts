@@ -3,6 +3,7 @@ import { MatMenuTrigger } from '@angular/material';
 import { Messenger } from './services/messenger';
 import { Router } from '@angular/router';
 import { Data } from './services/data';
+import { Sync } from './services/sync';
 const TIMEOUT = 3000;
 @Component({
     selector: 'app-root',
@@ -19,6 +20,7 @@ export class AppComponent {
         private router: Router,
         private messenger: Messenger,
         private data: Data,
+        private sync: Sync,
     ) { 
         
     }
@@ -34,17 +36,17 @@ export class AppComponent {
                 throw e;
             }
         }
+        this.data.syncableChanges.subscribe(async () => {
+            await this.sync.triggerSync();
+        });
     }
     ngAfterContentInit() { 
     }
 
     async download() {
-        console.log('download');
         let data = await this.data.getAllUserData();
-        console.log('data', data);
         let json = JSON.stringify(data);
-        console.log('json', json);
-        let b = new Blob([json], {type: 'text/json'});
+        let b = new Blob([json], {type: 'application/json'});
         let url = URL.createObjectURL(b);
         let loweredUA = window.navigator.userAgent.toLocaleLowerCase();
         if (loweredUA.indexOf('ios') > -1
@@ -52,7 +54,6 @@ export class AppComponent {
             window.open(url, '_blank');
         } else {
             let link = document.createElement('a');
-            console.log('url', url);
             link.setAttribute('href', url);
             link.setAttribute('download', 'healthTrackerHistory.json');
             document.body.appendChild(link);
@@ -60,5 +61,9 @@ export class AppComponent {
             document.body.removeChild(link);
             URL.revokeObjectURL(url);
         }
+    }
+
+    goToSyncSetup() {
+        this.router.navigateByUrl('/setup-sync')
     }
 }

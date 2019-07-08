@@ -1,0 +1,42 @@
+.mat-cell,
+.mat-footer-cell {
+    &.mat-column-time,
+    &.mat-column-carbs,
+    &.mat-column-fat,
+    &.mat-column-protein, 
+    &.mat-column-calories,
+    &.mat-column-weight,
+    &.mat-column-bodyFatPercentage {
+        justify-content: flex-end;
+    }
+}
+
+.mat-column-delete,
+.mat-column-edit {
+    justify-content: center;
+}
+
+.mat-header-cell {
+    justify-content: center;
+}
+
+
+@media (max-width: 550px) { 
+    .mat-column-time {
+        display: none;
+    }
+    .table-button {
+        width: 25px;
+        height: 25px;
+    }
+    .table-button-icon {
+        font-size: 12pt;
+        line-height: 7px;
+    }
+    .mat-header-cell,
+    .mat-cell,
+    .mat-footer-cell {
+        padding-left: 5px;
+        padding-right: 5px;
+    }
+}

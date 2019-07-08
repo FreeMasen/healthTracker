@@ -2,7 +2,7 @@
 import {Database} from './src/app/services/database'
 
 (function() {
-    let db = new Database();
+    let db = new Database(1);
     db.seed((event, table, target, value) => {
         postMessage({event, table, target, value});
     }).then(() => {

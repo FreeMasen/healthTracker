@@ -31,7 +31,7 @@ export class PersonalInfoComponent {
         let id = this.route.snapshot.paramMap.get('id');
         let user: IUser;
         if (id) {
-            user = await this.data.users.get(+id);
+            user = await this.data.users.get(id);
         } else {
             user = await this.data.getLatestUser();
         }
@@ -76,7 +76,9 @@ export class PersonalInfoComponent {
             updated: +moment(),
         };
         let id = this.route.snapshot.paramMap.get('id');
-        ret.id = +id;
+        if (id && id.length !== 0) {
+            ret.id = id;
+        }
         return ret;
     }
 }
