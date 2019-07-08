@@ -471,7 +471,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var rxjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! rxjs */ "./node_modules/rxjs/_esm5/index.js");
 /* harmony import */ var rxjs_operators__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! rxjs/operators */ "./node_modules/rxjs/_esm5/operators/index.js");
 /**
- * @license Angular v7.2.6
+ * @license Angular v7.2.15
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -927,6 +927,7 @@ var ChangeDetectionStrategy;
      * Use the `CheckOnce` strategy, meaning that automatic change detection is deactivated
      * until reactivated by setting the strategy to `Default` (`CheckAlways`).
      * Change detection can still be explicitly invoked.
+     * This strategy applies to all child directives and cannot be overridden.
      */
     ChangeDetectionStrategy[ChangeDetectionStrategy["OnPush"] = 0] = "OnPush";
     /**
@@ -1134,18 +1135,18 @@ function resolveForwardRef(type) {
  *   selector: 'my-comp',
  *   templateUrl: 'my-comp.html', // This requires asynchronous resolution
  * })
- * class MyComponnent{
+ * class MyComponent{
  * }
  *
- * // Calling `renderComponent` will fail because `MyComponent`'s `@Compenent.templateUrl`
- * // needs to be resolved because `renderComponent` is synchronous process.
- * // renderComponent(MyComponent);
+ * // Calling `renderComponent` will fail because `renderComponent` is a synchronous process
+ * // and `MyComponent`'s `@Component.templateUrl` needs to be resolved asynchronously.
  *
- * // Calling `resolveComponentResources` will resolve `@Compenent.templateUrl` into
- * // `@Compenent.template`, which would allow `renderComponent` to proceed in synchronous manner.
- * // Use browser's `fetch` function as the default resource resolution strategy.
+ * // Calling `resolveComponentResources()` will resolve `@Component.templateUrl` into
+ * // `@Component.template`, which allows `renderComponent` to proceed in a synchronous manner.
+ *
+ * // Use browser's `fetch()` function as the default resource resolution strategy.
  * resolveComponentResources(fetch).then(() => {
- *   // After resolution all URLs have been converted into strings.
+ *   // After resolution all URLs have been converted into `template` strings.
  *   renderComponent(MyComponent);
  * });
  *
@@ -1154,8 +1155,8 @@ function resolveForwardRef(type) {
  * NOTE: In AOT the resolution happens during compilation, and so there should be no need
  * to call this method outside JIT mode.
  *
- * @param resourceResolver a function which is responsible to returning a `Promise` of the resolved
- * URL. Browser's `fetch` method is a good default implementation.
+ * @param resourceResolver a function which is responsible for returning a `Promise` to the
+ * contents of the resolved URL. Browser's `fetch()` method is a good default implementation.
  */
 function resolveComponentResources(resourceResolver) {
     // Store all promises which are fetching the resources.
@@ -2122,7 +2123,7 @@ var R3ResolvedDependencyType;
  * found in the LICENSE file at https://angular.io/license
  */
 function getCompilerFacade() {
-    var globalNg = _global.ng;
+    var globalNg = _global['ng'];
     if (!globalNg || !globalNg.ɵcompilerFacade) {
         throw new Error("Angular JIT compilation failed: '@angular/compiler' not loaded!\n" +
             "  - JIT compilation is discouraged for production use-cases! Consider AOT mode instead.\n" +
@@ -5578,7 +5579,7 @@ function updateStylingMap(context, classesInput, stylesInput, directiveRef) {
     var classesValue = classesPlayerBuilder ?
         classesInput.value :
         classesInput;
-    var stylesValue = stylesPlayerBuilder ? stylesInput.value : stylesInput;
+    var stylesValue = stylesPlayerBuilder ? stylesInput['value'] : stylesInput;
     // early exit (this is what's done to avoid using ctx.bind() to cache the value)
     var ignoreAllClassUpdates = limitToSingleClasses(context) || classesValue === NO_CHANGE ||
         classesValue === context[6 /* CachedClassValueOrInitialClassString */];
@@ -11215,7 +11216,7 @@ var Version = /** @class */ (function () {
 /**
  * @publicApi
  */
-var VERSION = new Version('7.2.6');
+var VERSION = new Version('7.2.15');
 
 /**
  * @license
@@ -11651,7 +11652,7 @@ function isDOMParserAvailable() {
  * execution if used in URL context within a HTML document. Specifically, this
  * regular expression matches if (comment from here on and regex copied from
  * Soy's EscapingConventions):
- * (1) Either a protocol in a whitelist (http, https, mailto or ftp).
+ * (1) Either an allowed protocol (http, https, mailto or ftp).
  * (2) or no protocol.  A protocol must be followed by a colon. The below
  *     allows that by allowing colons only after one of the characters [/?#].
  *     A colon after a hash (#) must be in the fragment.
@@ -11773,6 +11774,12 @@ var HTML_ATTRS = tagSet('abbr,accesskey,align,alt,autoplay,axis,bgcolor,border,c
 // can be sanitized, but they increase security surface area without a legitimate use case, so they
 // are left out here.
 var VALID_ATTRS = merge$1(URI_ATTRS, SRCSET_ATTRS, HTML_ATTRS);
+// Elements whose content should not be traversed/preserved, if the elements themselves are invalid.
+//
+// Typically, `<invalid>Some content</invalid>` would traverse (and in this case preserve)
+// `Some content`, but strip `invalid-element` opening/closing tags. For some elements, though, we
+// don't want to preserve the content, if the elements themselves are going to be removed.
+var SKIP_TRAVERSING_CONTENT_IF_INVALID_ELEMENTS = tagSet('script,style,template');
 /**
  * SanitizingHtmlSerializer serializes a DOM fragment, stripping out any unsafe elements and unsafe
  * attributes.
@@ -11789,10 +11796,10 @@ var SanitizingHtmlSerializer = /** @class */ (function () {
         // However this code never accesses properties off of `document` before deleting its contents
         // again, so it shouldn't be vulnerable to DOM clobbering.
         var current = el.firstChild;
-        var elementValid = true;
+        var traverseContent = true;
         while (current) {
             if (current.nodeType === Node.ELEMENT_NODE) {
-                elementValid = this.startElement(current);
+                traverseContent = this.startElement(current);
             }
             else if (current.nodeType === Node.TEXT_NODE) {
                 this.chars(current.nodeValue);
@@ -11801,7 +11808,7 @@ var SanitizingHtmlSerializer = /** @class */ (function () {
                 // Strip non-element, non-text nodes.
                 this.sanitizedSomething = true;
             }
-            if (elementValid && current.firstChild) {
+            if (traverseContent && current.firstChild) {
                 current = current.firstChild;
                 continue;
             }
@@ -11821,18 +11828,18 @@ var SanitizingHtmlSerializer = /** @class */ (function () {
         return this.buf.join('');
     };
     /**
-     * Outputs only valid Elements.
+     * Sanitizes an opening element tag (if valid) and returns whether the element's contents should
+     * be traversed. Element content must always be traversed (even if the element itself is not
+     * valid/safe), unless the element is one of `SKIP_TRAVERSING_CONTENT_IF_INVALID_ELEMENTS`.
      *
-     * Invalid elements are skipped.
-     *
-     * @param element element to sanitize
-     * Returns true if the element is valid.
+     * @param element The element to sanitize.
+     * @return True if the element's contents should be traversed.
      */
     SanitizingHtmlSerializer.prototype.startElement = function (element) {
         var tagName = element.nodeName.toLowerCase();
         if (!VALID_ELEMENTS.hasOwnProperty(tagName)) {
             this.sanitizedSomething = true;
-            return false;
+            return !SKIP_TRAVERSING_CONTENT_IF_INVALID_ELEMENTS.hasOwnProperty(tagName);
         }
         this.buf.push('<');
         this.buf.push(tagName);
@@ -12565,6 +12572,9 @@ function readUpdateOpCodes(updateOpCodes, icus, bindingsStartIndex, changeMask, 
                     }
                     else {
                         var nodeIndex = opCode >>> 2 /* SHIFT_REF */;
+                        var tIcuIndex = void 0;
+                        var tIcu = void 0;
+                        var icuTNode = void 0;
                         switch (opCode & 3 /* MASK_OPCODE */) {
                             case 1 /* Attr */:
                                 var attrName = updateOpCodes[++j];
@@ -12575,9 +12585,9 @@ function readUpdateOpCodes(updateOpCodes, icus, bindingsStartIndex, changeMask, 
                                 textBinding(nodeIndex, value);
                                 break;
                             case 2 /* IcuSwitch */:
-                                var tIcuIndex = updateOpCodes[++j];
-                                var tIcu = icus[tIcuIndex];
-                                var icuTNode = getTNode(nodeIndex, viewData);
+                                tIcuIndex = updateOpCodes[++j];
+                                tIcu = icus[tIcuIndex];
+                                icuTNode = getTNode(nodeIndex, viewData);
                                 // If there is an active case, delete the old nodes
                                 if (icuTNode.activeCaseIndex !== null) {
                                     var removeCodes = tIcu.remove[icuTNode.activeCaseIndex];
@@ -15855,7 +15865,7 @@ var initializeBaseDef = function (target) {
     }
 };
 /**
- * Does the work of creating the `ngBaseDef` property for the @Input and @Output decorators.
+ * Does the work of creating the `ngBaseDef` property for the `Input` and `Output` decorators.
  * @param key "inputs" or "outputs"
  */
 var updateBaseDefFromIOProp = function (getProp) {
@@ -59982,7 +59992,7 @@ exports.clearImmediate = (typeof self !== "undefined" && self.clearImmediate) ||
 /*!*****************************************!*\
   !*** ./node_modules/tslib/tslib.es6.js ***!
   \*****************************************/
-/*! exports provided: __extends, __assign, __rest, __decorate, __param, __metadata, __awaiter, __generator, __exportStar, __values, __read, __spread, __await, __asyncGenerator, __asyncDelegator, __asyncValues, __makeTemplateObject, __importStar, __importDefault */
+/*! exports provided: __extends, __assign, __rest, __decorate, __param, __metadata, __awaiter, __generator, __exportStar, __values, __read, __spread, __spreadArrays, __await, __asyncGenerator, __asyncDelegator, __asyncValues, __makeTemplateObject, __importStar, __importDefault */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -59999,6 +60009,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "__values", function() { return __values; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "__read", function() { return __read; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "__spread", function() { return __spread; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "__spreadArrays", function() { return __spreadArrays; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "__await", function() { return __await; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "__asyncGenerator", function() { return __asyncGenerator; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "__asyncDelegator", function() { return __asyncDelegator; });
@@ -60051,8 +60062,10 @@ function __rest(s, e) {
     for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
         t[p] = s[p];
     if (s != null && typeof Object.getOwnPropertySymbols === "function")
-        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) if (e.indexOf(p[i]) < 0)
-            t[p[i]] = s[p[i]];
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
+        }
     return t;
 }
 
@@ -60145,6 +60158,14 @@ function __spread() {
         ar = ar.concat(__read(arguments[i]));
     return ar;
 }
+
+function __spreadArrays() {
+    for (var s = 0, i = 0, il = arguments.length; i < il; i++) s += arguments[i].length;
+    for (var r = Array(s), k = 0, i = 0; i < il; i++)
+        for (var a = arguments[i], j = 0, jl = a.length; j < jl; j++, k++)
+            r[k] = a[j];
+    return r;
+};
 
 function __await(v) {
     return this instanceof __await ? (this.v = v, this) : new __await(v);

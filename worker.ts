@@ -1,8 +1,8 @@
 /// <reference lib="webworker" />
-import {Database} from './src/app/services/database'
+import {Database} from './src/app/services/database';
 
 (function() {
-    let db = new Database(1);
+    const db = new Database(1);
     db.seed((event, table, target, value) => {
         postMessage({event, table, target, value});
     }).then(() => {
@@ -10,4 +10,4 @@ import {Database} from './src/app/services/database'
     }).catch(e => {
         postMessage({event: 'error', error: e});
     });
-})()
+})();

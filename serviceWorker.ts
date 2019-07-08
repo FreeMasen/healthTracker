@@ -1,12 +1,12 @@
 /// <reference lib="webworker" />
-(function (self: ServiceWorkerGlobalScope) {
+(function(self: ServiceWorkerGlobalScope) {
     const CACHE_NAME = 'HealthTracker';
     self.addEventListener('install', ev => {
         ev.waitUntil(self.skipWaiting());
     });
     self.addEventListener('activate', ev => {
         ev.waitUntil(self.clients.claim());
-    })
+    });
     self.addEventListener('fetch', ev => {
         ev.respondWith(handleFetch(ev));
     });
@@ -24,15 +24,13 @@
                 return cache.put(ev.request, r.clone())
                     .then(() => r)
                     .catch(() => r);
-            })
+            });
         })
-        .catch(e => {
-            return fallbackResponse(ev.request)
-        });
+        .catch(e => fallbackResponse(ev.request));
     }
 
     async function fallbackResponse(req: Request): Promise<Response> {
-        let cache = await self.caches.open('DnDCharacterManager');
+        const cache = await self.caches.open('DnDCharacterManager');
         return await cache.match(req);
     }
 })(self as unknown as ServiceWorkerGlobalScope);

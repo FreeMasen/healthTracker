@@ -9,6 +9,7 @@
     "deprecation": {
       "severity": "warn"
     },
+    "only-arrow-functions": false,
     "import-blacklist": [
       true,
       "rxjs/Rx"

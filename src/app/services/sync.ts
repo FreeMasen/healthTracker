@@ -4,6 +4,7 @@ import { IArchive } from './database';
 import { readFile } from './util';
 import { Data } from './data';
 import { Messenger } from './messenger';
+import { environment } from '../../environments/environment';
 export interface IDropboxInfo {
     id?: string;
     token: null,
@@ -61,10 +62,10 @@ export class RawDropboxSync {
         
     }
 
-    async requestDropboxAuthentication(clientId) {
+    async requestDropboxAuthentication(clientId: string) {
         console.log('requestDropboxAuthentication');
         let dbx = new dropbox.Dropbox({clientId, fetch});
-        let url = dbx.getAuthenticationUrl('http://localhost:4200/setup-sync/');
+        let url = dbx.getAuthenticationUrl(environment.callbackUri);
         window.open(url, '_blank');
         return url;
     }
