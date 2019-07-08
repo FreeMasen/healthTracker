@@ -51,13 +51,14 @@ export class AppComponent {
             || loweredUA.indexOf('android') > -1) {
             window.open(url, '_blank');
         } else {
-        let link = document.createElement('a');
-        console.log('url', url);
-        link.setAttribute('href', url);
-        link.setAttribute('download', 'healthTrackerHistory.json');
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
+            let link = document.createElement('a');
+            console.log('url', url);
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'healthTrackerHistory.json');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
     }
 }
