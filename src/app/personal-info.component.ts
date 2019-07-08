@@ -1,4 +1,4 @@
-import { Component, Output, EventEmitter } from '@angular/core';
+import { Component, Output, EventEmitter, OnInit } from '@angular/core';
 import { ActivityLevel, Data, IUser } from './services/data';
 import { normalizeString } from './services/util';
 import { Messenger } from './services/messenger';
@@ -11,7 +11,7 @@ import * as moment from 'moment';
     templateUrl: './personal-info.html',
     styleUrls: ['./personal-info.scss'],
 })
-export class PersonalInfoComponent {
+export class PersonalInfoComponent implements OnInit {
     weight: number;
     heightFeet: number;
     heightInches: number;
@@ -47,7 +47,11 @@ export class PersonalInfoComponent {
     }
     async saveInfo() {
         const user = this.infoAsUser();
+<<<<<<< HEAD
         const firstMissing = Object.getOwnPropertyNames(user).find(name => name !== 'id' && user[name] === undefined);
+=======
+        const firstMissing = Object.getOwnPropertyNames(user).find(name => name !== 'id' && user[name] !== undefined);
+>>>>>>> publish
         if (firstMissing) {
             return this.messenger.send(`${normalizeString(firstMissing)} is required`, true);
         }
