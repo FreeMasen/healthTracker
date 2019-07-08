@@ -158,9 +158,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
                                 .catch(function () { return r; });
                         });
                     })
-                        .catch(function (e) {
-                        return fallbackResponse(ev.request);
-                    })];
+                        .catch(function (e) { return fallbackResponse(ev.request); })];
             });
         });
     }
