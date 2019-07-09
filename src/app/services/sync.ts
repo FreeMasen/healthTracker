@@ -148,7 +148,7 @@ export class Sync {
                 return;
             }
             this.dropboxInfo = info;
-            this.dropboxSync().then(() => {});
+            this._dropboxSync().then(() => {});
         });
     }
 
@@ -169,7 +169,7 @@ export class Sync {
                 this.dropboxTimer = setTimeout(
                     async () => 
                         await this._dropboxSync()
-                    , 5 * 60 * 1000
+                    , environment.dropboxTimeout
                 )
             break;
         }
@@ -179,27 +179,27 @@ export class Sync {
         this.startTimer(ServiceKind.Dropbox);
     }
     private async dropboxSync() {
-        this.msg.send('syncing dropbox', false);
         if (!this.dropboxInfo) {
             return console.error('attempt to sync dropbox with no credentials');
         }
         let lastHash = await this.data.getLastDropboxHash();
         let changes = await this.dropbox.getChangesFromDropbox(this.dropboxInfo.token, lastHash);
         if (changes && changes.fileHash != lastHash) {
-            await this.data.importArchive(changes.archive, false);
-            console.log('imported changes');
+            const update = await this.data.importArchive(changes.archive, false);
             await this.data.saveDropboxChanges(changes);
-            console.log('saved change info');
+            this.msg.send(`Got ${update.meals} meals with ${update.items} items and ${update.body} measurements from dropbox`, false);
         }
         let update = await this.data.getAllUserData();
         let dbx = new dropbox.Dropbox({accessToken: this.dropboxInfo.token, fetch});
         let newChanges = await this.dropbox.sendChangesToDropbox(dbx, update);
         await this.data.saveDropboxChanges(newChanges);
-        this.msg.send('dropbox sync complete', false);
     }
     public async triggerSync() {
+        if (this.dropboxTimer) {
+            clearTimeout(this.dropboxTimer);
+        }
         if (this.dropboxInfo) {
-            this.dropboxSync();
+            this._dropboxSync();
         }
     }
     async hasDropboxSetup() {

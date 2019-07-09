@@ -4,7 +4,8 @@
 
 export const environment = {
   production: false,
-  callbackUri: 'http://localhost:4200/setup-sync/'
+  callbackUri: 'http://localhost:4200/setup-sync/',
+  dropboxTimeout: 5000,
 };
 
 /*
