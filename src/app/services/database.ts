@@ -402,6 +402,8 @@ export class Database extends Dexie {
 
     private async fillDay(day: IDay): Promise<Day> {
         const dbMeals = await this.meals.where('dayId').equals(day.id).and(d => !d.deleted).toArray();
+        console.log('dbMeals', dbMeals);
+
         const ret = new Day(day.date, new Array(dbMeals.length), day.id);
         for (let i = 0; i < dbMeals.length; i++) {
             const dbMeal = dbMeals[i];
@@ -517,11 +519,29 @@ export class Database extends Dexie {
 
     async getAllUserData(): Promise<IArchive> {
         const dbDays = await this.days.toArray();
-        const mealHistory = new Array(dbDays.length);
-        for (let i = 0; i < dbDays.length; i++) {
-            mealHistory[i] = await this.fillDay(dbDays[i]);
+        let mealHistory = [];
+        for (let day of dbDays) {
+            let dbMeals = await this.meals.where('dayId').equals(day.id).toArray();
+            let meals = [];
+            for (let meal of dbMeals) {
+                let items = await this.mealItems.where('mealId').equals(meal.id).toArray();
+                meals.push({
+                    id: meal.id,
+                    time: meal.time,
+                    dayId: day.id,
+                    name: meal.name,
+                    deleted: meal.deleted,
+                    items,
+                });
+            }
+            mealHistory.push({
+                id: day.id,
+                date: day.date,
+                meals,
+                deleted: day.deleted,
+            });
         }
-        const bodyHistory = await this.users.toArray();
+        let bodyHistory = await this.users.toArray();
         return {
             mealHistory,
             bodyHistory,
@@ -529,6 +549,7 @@ export class Database extends Dexie {
     }
 
     async importArchive(archive: IArchive, syncable: boolean = true) {
+        console.log('importArchive', archive, syncable);
         const result = {
             days: 0,
             meals: 0,
@@ -536,20 +557,33 @@ export class Database extends Dexie {
             body: 0,
         };
         for (const day of archive.mealHistory) {
-            const existingDay = await this.days.where('id').equals(day.id).first();
+            const existingDay = await this.days.where('date').equals(day.date).first();
+            console.log('day vs existing', day, existingDay);
             if (!existingDay) {
+                // day is unknown, add a new day
                 await this.days.put({
                     id: day.id,
                     date: day.date,
                     deleted: day.deleted
                 });
                 result.days++;
+            } else {
+                // We already have that day but let's just overwrite the ID to that of
+                // the archive
+                let meals = await this.meals.where('dayId').equals(existingDay.id).toArray();
+                for (let meal of meals) {
+                    let updatedMeal = Object.assign({}, meal, {dayId: day.id});
+                    await this.meals.put(updatedMeal);
+                }
+                await this.days.delete(existingDay.id);
+                await this.days.put(day);
             }
             for (const meal of day.meals) {
                 const existingMeal = await this.meals.where('id')
                     .equals(meal.id)
                     .first();
-                if (!existingMeal) {
+                console.log('meal vs existing', meal, existingMeal);
+                if (!existingMeal || !this.checkMeals(existingMeal, meal)) {
                     const toInsert = {
                         id: meal.id,
                         time: meal.time,
@@ -559,12 +593,15 @@ export class Database extends Dexie {
                     };
                     await this.meals.put(toInsert);
                     result.meals++;
+                } else {
+
                 }
                 for (const item of meal.items) {
                     const existingItem = await this.mealItems
                         .where('id')
                         .equals(item.id)
                         .first();
+                    console.log('item vs existing', item, existingItem);
                     if (!existingItem) {
                         const i = Object.assign({}, item);
                         i.mealId = meal.id;
@@ -576,7 +613,8 @@ export class Database extends Dexie {
         }
         for (const body of archive.bodyHistory) {
             const existingBody = await this.users.where('id').equals(body.id).first();
-            if (!existingBody) {
+            console.log('body vs existing', body, existingBody);
+            if (!existingBody || !this.checkBodies(body, existingBody)) {
                 await this.users.put(body);
                 result.body++;
             }
@@ -586,6 +624,25 @@ export class Database extends Dexie {
         }
         this.renderableChanges.emit();
         return result;
+    }
+    private checkMeals(lhs: IMeal, rhs: IArchivedMeal): boolean {
+        return lhs
+            && rhs
+            && lhs.name === rhs.name
+            && lhs.time.hours === rhs.time.hours
+            && lhs.time.minutes === rhs.time.minutes
+            && lhs.deleted === rhs.deleted
+    }
+    private checkBodies(lhs: IUser, rhs: IUser): boolean {
+        return lhs 
+            && rhs 
+            && lhs.activityLevel === rhs.activityLevel
+            && lhs.age === rhs.age
+            && lhs.bodyFatPercentage === rhs.bodyFatPercentage
+            && lhs.deleted === rhs.deleted
+            && lhs.height === rhs.height
+            && lhs.weight === rhs.weight
+            && lhs.weightTarget === rhs.weightTarget
     }
 
     public async addDropBoxInfo(info: IDropboxInfo) {
