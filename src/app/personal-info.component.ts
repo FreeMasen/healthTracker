@@ -19,6 +19,7 @@ export class PersonalInfoComponent implements OnInit {
     bodyFatPercent: number;
     activityLevel: ActivityLevel;
     weightTarget: number;
+    updated: moment.Moment | number;
     activityLevels = Object.getOwnPropertyNames(ActivityLevel).map(name => ActivityLevel[name]);
     @Output() onSave = new EventEmitter<void>();
     constructor(
@@ -34,6 +35,9 @@ export class PersonalInfoComponent implements OnInit {
             user = await this.data.users.get(id);
         } else {
             user = await this.data.getLatestUser();
+            user = Object.assign({}, user);
+            delete user.id;
+            user.updated = +moment();
         }
         if (user) {
             this.weight = user.weight;
@@ -43,20 +47,17 @@ export class PersonalInfoComponent implements OnInit {
             this.bodyFatPercent = user.bodyFatPercentage;
             this.activityLevel = user.activityLevel as ActivityLevel;
             this.weightTarget = user.weightTarget;
+            this.updated = user.updated;
         }
     }
     async saveInfo() {
         const user = this.infoAsUser();
-<<<<<<< HEAD
         const firstMissing = Object.getOwnPropertyNames(user).find(name => name !== 'id' && user[name] === undefined);
-=======
-        const firstMissing = Object.getOwnPropertyNames(user).find(name => name !== 'id' && user[name] !== undefined);
->>>>>>> publish
         if (firstMissing) {
             return this.messenger.send(`${normalizeString(firstMissing)} is required`, true);
         }
         if (user.id) {
-            await this.data.users.put(user).then(() => {
+            await this.data.updateUser(user).then(() => {
                 this.location.back();
             });
         } else {
@@ -77,7 +78,7 @@ export class PersonalInfoComponent implements OnInit {
             bodyFatPercentage: this.bodyFatPercent,
             activityLevel: this.activityLevel,
             weightTarget: this.weightTarget,
-            updated: +moment(),
+            updated: this.updated,
             deleted: false,
         };
         const id = this.route.snapshot.paramMap.get('id');

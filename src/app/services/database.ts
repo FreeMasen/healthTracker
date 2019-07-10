@@ -309,13 +309,12 @@ export class Database extends Dexie {
      * Check if this database instance has been seeded
      */
     async hasBeenSeeded() {
-        return (await this.seeds.count()) >= 2;
+        return (await this.seeds.count()) >= 1;
     }
     /**
      * Check if the database is ready to be searched
      */
     async isReady() {
-
         const lastUpdate = await this.seeds.orderBy('id').last();
         return lastUpdate.state === 'complete';
     }
@@ -333,8 +332,22 @@ export class Database extends Dexie {
         if (typeof info.updated !== 'number') {
             info.updated = +info.updated; // unix ms timestamp
         }
-        await this.users.put(info);
+        await this.users.add(info);
         this.renderableChanges.emit();
+    }
+    async updateUser(user: IUser) {
+        const existing = await this.users.get(user.id);
+        existing.deleted = true;
+        delete user.id;
+        if (!user.updated) {
+            user.updated = +moment(); // unix ms timestamp
+        }
+        if (typeof user.updated !== 'number') {
+            user.updated = +user.updated; // unix ms timestamp
+        }
+
+        await this.users.put(existing);
+        await this.users.add(user);
     }
     /**
      * Get the last entry for the user's history
