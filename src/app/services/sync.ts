@@ -7,9 +7,9 @@ import { Messenger } from './messenger';
 import { environment } from '../../environments/environment';
 export interface IDropboxInfo {
     id?: string;
-    token: null,
-    userId: null,
-    accountId: null,
+    token: null;
+    userId: null;
+    accountId: null;
 }
 const PATH_ROOT = '/FreeMasensHealthTracker';
 const HISTORY_FILE = 'healthTrackerHistory.json';
@@ -22,8 +22,12 @@ export interface IDropboxUploadResult {
 export interface IDropboxChanges {
     id?: string;
     archive?: IArchive;
-    fileHash: string,
+    fileHash: string;
     fileModified: string;
+}
+
+export enum ServiceKind {
+    Dropbox,
 }
 
 @Injectable({
@@ -37,53 +41,51 @@ export class RawDropboxSync {
     }
 
     public extractHash(): IDropboxInfo {
-        let parts = location.hash.split('&');
+        const parts = location.hash.split('&');
         return parts.reduce((acc, p) => {
             if (p[0] === '#') {
                 p = p.substr(1);
             }
-            let pair = p.split('=');
+            const pair = p.split('=');
             switch (pair[0]) {
                 case 'access_token':
                     acc.token = pair[1];
-                break;
+                    break;
                 case 'uid':
                     acc.userId = pair[1];
-                break;
+                    break;
                 case 'account_id':
-                    acc.accountId = pair[1]
-                break;
+                    acc.accountId = pair[1];
+                    break;
             }
             return acc;
         }, {token: null,
             userId: null,
             accountId: null,
         });
-        
     }
 
     async requestDropboxAuthentication(clientId: string) {
         console.log('requestDropboxAuthentication');
-        let dbx = new dropbox.Dropbox({clientId, fetch});
-        let url = dbx.getAuthenticationUrl(environment.callbackUri);
+        const dbx = new dropbox.Dropbox({clientId, fetch});
+        const url = dbx.getAuthenticationUrl(environment.callbackUri);
         window.open(url, '_blank');
         return url;
     }
 
     async ensureFileStructure(accessToken: string) {
-        let dbx = new dropbox.Dropbox({accessToken, fetch});
+        const dbx = new dropbox.Dropbox({accessToken, fetch});
         let files: dropbox.files.ListFolderResult;
         try {
             files = await dbx.filesListFolder({path: PATH_ROOT});
         } catch {
-            await dbx.filesCreateFolder({path: PATH_ROOT});
+            await dbx.filesCreateFolderV2({path: PATH_ROOT});
             files = await dbx.filesListFolder({path: PATH_ROOT});
-            files.entries
         }
         if (files.entries.length === 0) {
             await this.sendChangesToDropbox(dbx);
         } else {
-            let file = files.entries.find(f => f.name === HISTORY_FILE);
+            const file = files.entries.find(f => f.name === HISTORY_FILE);
             if (!file) {
                 await this.sendChangesToDropbox(dbx);
             }
@@ -95,17 +97,17 @@ export class RawDropboxSync {
             archive = {
                 mealHistory: [],
                 bodyHistory: [],
-            }
+            };
         }
-        let result = await dbx.filesUpload({path: FULL_PATH, contents: JSON.stringify(archive), mode: {'.tag': 'overwrite'}});
+        const result = await dbx.filesUpload({path: FULL_PATH, contents: JSON.stringify(archive), mode: {'.tag': 'overwrite'}});
         return {
             fileModified: result.client_modified,
             fileHash: result.content_hash
-        }
+        };
     }
 
     async getChangesFromDropbox(accessToken: string, currentHash: string): Promise<IDropboxChanges | void> {
-        let dbx = new dropbox.Dropbox({accessToken, fetch});
+        const dbx = new dropbox.Dropbox({accessToken, fetch});
         let metaInfo: dropbox.files.FileMetadataReference;
         try {
             metaInfo = await dbx.filesGetMetadata({ path: FULL_PATH, include_deleted: false }) as dropbox.files.FileMetadataReference;
@@ -120,8 +122,8 @@ export class RawDropboxSync {
                 return console.error('error downloading file', e);
             }
             if (dl.fileBlob) {
-                let contents = await readFile(dl.fileBlob);
-                let data = JSON.parse(contents);
+                const contents = await readFile(dl.fileBlob);
+                const data = JSON.parse(contents);
                 return {
                     archive: data,
                     fileHash: dl.content_hash,
@@ -139,7 +141,7 @@ export class Sync {
     private dropboxInfo: IDropboxInfo;
     private dropboxTimer;
     constructor(
-        private dropbox: RawDropboxSync,
+        private dbx: RawDropboxSync,
         private data: Data,
         private msg: Messenger,
     ) {
@@ -153,13 +155,13 @@ export class Sync {
     }
 
     public async requestNewDropbox() {
-        this.dropbox.requestDropboxAuthentication('6qddpekngz9fnji');
+        this.dbx.requestDropboxAuthentication('6qddpekngz9fnji');
     }
     public async completeDropboxSetup() {
-        this.dropboxInfo = this.dropbox.extractHash();
+        this.dropboxInfo = this.dbx.extractHash();
         await this.data.addDropBoxInfo(this.dropboxInfo);
-        await this.dropbox.init(this.dropboxInfo.token);
-        this.msg.send("Dropbox setup complete", false);
+        await this.dbx.init(this.dropboxInfo.token);
+        this.msg.send('Dropbox setup complete', false);
         await this.dropboxSync();
     }
 
@@ -167,31 +169,31 @@ export class Sync {
         switch (service) {
             case ServiceKind.Dropbox:
                 this.dropboxTimer = setTimeout(
-                    async () => 
+                    async () =>
                         await this._dropboxSync()
                     , environment.dropboxTimeout
-                )
-            break;
+                );
+                break;
         }
     }
     private async _dropboxSync() {
-        await this.dropboxSync()
+        await this.dropboxSync();
         this.startTimer(ServiceKind.Dropbox);
     }
     private async dropboxSync() {
         if (!this.dropboxInfo) {
             return console.error('attempt to sync dropbox with no credentials');
         }
-        let lastHash = await this.data.getLastDropboxHash();
-        let changes = await this.dropbox.getChangesFromDropbox(this.dropboxInfo.token, lastHash);
-        if (changes && changes.fileHash != lastHash) {
-            const update = await this.data.importArchive(changes.archive, false);
+        const lastHash = await this.data.getLastDropboxHash();
+        const changes = await this.dbx.getChangesFromDropbox(this.dropboxInfo.token, lastHash);
+        if (changes && changes.fileHash !== lastHash) {
+            const fromDbx = await this.data.importArchive(changes.archive, false);
             await this.data.saveDropboxChanges(changes);
-            this.msg.send(`Got ${update.meals} meals with ${update.items} items and ${update.body} measurements from dropbox`, false);
+            this.msg.send(`Got ${fromDbx.meals} meals with ${fromDbx.items} items and ${fromDbx.body} measurements from dropbox`, false);
         }
-        let update = await this.data.getAllUserData();
-        let dbx = new dropbox.Dropbox({accessToken: this.dropboxInfo.token, fetch});
-        let newChanges = await this.dropbox.sendChangesToDropbox(dbx, update);
+        const update = await this.data.getAllUserData();
+        const dbx = new dropbox.Dropbox({accessToken: this.dropboxInfo.token, fetch});
+        const newChanges = await this.dbx.sendChangesToDropbox(dbx, update);
         await this.data.saveDropboxChanges(newChanges);
     }
     public async triggerSync() {
@@ -223,8 +225,4 @@ export class Sync {
             this.dropboxInfo = null;
         }
     }
-}
-
-export enum ServiceKind {
-    Dropbox,
 }
