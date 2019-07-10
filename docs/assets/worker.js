@@ -60465,7 +60465,7 @@ var Database = /** @class */ (function (_super) {
             return tslib__WEBPACK_IMPORTED_MODULE_0__["__generator"](this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.seeds.count()];
-                    case 1: return [2 /*return*/, (_a.sent()) >= 2];
+                    case 1: return [2 /*return*/, (_a.sent()) >= 1];
                 }
             });
         });
@@ -60504,10 +60504,37 @@ var Database = /** @class */ (function (_super) {
                         if (typeof info.updated !== 'number') {
                             info.updated = +info.updated; // unix ms timestamp
                         }
-                        return [4 /*yield*/, this.users.put(info)];
+                        return [4 /*yield*/, this.users.add(info)];
                     case 1:
                         _a.sent();
                         this.renderableChanges.emit();
+                        return [2 /*return*/];
+                }
+            });
+        });
+    };
+    Database.prototype.updateUser = function (user) {
+        return tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"](this, void 0, void 0, function () {
+            var existing;
+            return tslib__WEBPACK_IMPORTED_MODULE_0__["__generator"](this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.users.get(user.id)];
+                    case 1:
+                        existing = _a.sent();
+                        existing.deleted = true;
+                        delete user.id;
+                        if (!user.updated) {
+                            user.updated = +moment__WEBPACK_IMPORTED_MODULE_3__(); // unix ms timestamp
+                        }
+                        if (typeof user.updated !== 'number') {
+                            user.updated = +user.updated; // unix ms timestamp
+                        }
+                        return [4 /*yield*/, this.users.put(existing)];
+                    case 2:
+                        _a.sent();
+                        return [4 /*yield*/, this.users.add(user)];
+                    case 3:
+                        _a.sent();
                         return [2 /*return*/];
                 }
             });
@@ -60638,6 +60665,7 @@ var Database = /** @class */ (function (_super) {
                     case 0: return [4 /*yield*/, this.meals.where('dayId').equals(day.id).and(function (d) { return !d.deleted; }).toArray()];
                     case 1:
                         dbMeals = _a.sent();
+                        console.log('dbMeals', dbMeals);
                         ret = new Day(day.date, new Array(dbMeals.length), day.id);
                         i = 0;
                         _a.label = 2;
@@ -60817,29 +60845,56 @@ var Database = /** @class */ (function (_super) {
     };
     Database.prototype.getAllUserData = function () {
         return tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"](this, void 0, void 0, function () {
-            var dbDays, mealHistory, i, _a, _b, bodyHistory;
-            return tslib__WEBPACK_IMPORTED_MODULE_0__["__generator"](this, function (_c) {
-                switch (_c.label) {
+            var dbDays, mealHistory, _i, dbDays_1, day, dbMeals, meals, _a, dbMeals_1, meal, items, bodyHistory;
+            return tslib__WEBPACK_IMPORTED_MODULE_0__["__generator"](this, function (_b) {
+                switch (_b.label) {
                     case 0: return [4 /*yield*/, this.days.toArray()];
                     case 1:
-                        dbDays = _c.sent();
-                        mealHistory = new Array(dbDays.length);
-                        i = 0;
-                        _c.label = 2;
+                        dbDays = _b.sent();
+                        mealHistory = [];
+                        _i = 0, dbDays_1 = dbDays;
+                        _b.label = 2;
                     case 2:
-                        if (!(i < dbDays.length)) return [3 /*break*/, 5];
-                        _a = mealHistory;
-                        _b = i;
-                        return [4 /*yield*/, this.fillDay(dbDays[i])];
+                        if (!(_i < dbDays_1.length)) return [3 /*break*/, 9];
+                        day = dbDays_1[_i];
+                        return [4 /*yield*/, this.meals.where('dayId').equals(day.id).toArray()];
                     case 3:
-                        _a[_b] = _c.sent();
-                        _c.label = 4;
+                        dbMeals = _b.sent();
+                        meals = [];
+                        _a = 0, dbMeals_1 = dbMeals;
+                        _b.label = 4;
                     case 4:
-                        i++;
-                        return [3 /*break*/, 2];
-                    case 5: return [4 /*yield*/, this.users.toArray()];
+                        if (!(_a < dbMeals_1.length)) return [3 /*break*/, 7];
+                        meal = dbMeals_1[_a];
+                        return [4 /*yield*/, this.mealItems.where('mealId').equals(meal.id).toArray()];
+                    case 5:
+                        items = _b.sent();
+                        meals.push({
+                            id: meal.id,
+                            time: meal.time,
+                            dayId: day.id,
+                            name: meal.name,
+                            deleted: meal.deleted,
+                            items: items,
+                        });
+                        _b.label = 6;
                     case 6:
-                        bodyHistory = _c.sent();
+                        _a++;
+                        return [3 /*break*/, 4];
+                    case 7:
+                        mealHistory.push({
+                            id: day.id,
+                            date: day.date,
+                            meals: meals,
+                            deleted: day.deleted,
+                        });
+                        _b.label = 8;
+                    case 8:
+                        _i++;
+                        return [3 /*break*/, 2];
+                    case 9: return [4 /*yield*/, this.users.toArray()];
+                    case 10:
+                        bodyHistory = _b.sent();
                         return [2 /*return*/, {
                                 mealHistory: mealHistory,
                                 bodyHistory: bodyHistory,
@@ -60851,10 +60906,11 @@ var Database = /** @class */ (function (_super) {
     Database.prototype.importArchive = function (archive, syncable) {
         if (syncable === void 0) { syncable = true; }
         return tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"](this, void 0, void 0, function () {
-            var result, _i, _a, day, existingDay, _b, _c, meal, existingMeal, toInsert, _d, _e, item, existingItem, i, _f, _g, body, existingBody;
-            return tslib__WEBPACK_IMPORTED_MODULE_0__["__generator"](this, function (_h) {
-                switch (_h.label) {
+            var result, _i, _a, day, existingDay, meals, _b, meals_1, meal, updatedMeal, _c, _d, meal, existingMeal, toInsert, _e, _f, item, existingItem, i, _g, _h, body, existingBody;
+            return tslib__WEBPACK_IMPORTED_MODULE_0__["__generator"](this, function (_j) {
+                switch (_j.label) {
                     case 0:
+                        console.log('importArchive', archive, syncable);
                         result = {
                             days: 0,
                             meals: 0,
@@ -60862,35 +60918,62 @@ var Database = /** @class */ (function (_super) {
                             body: 0,
                         };
                         _i = 0, _a = archive.mealHistory;
-                        _h.label = 1;
+                        _j.label = 1;
                     case 1:
-                        if (!(_i < _a.length)) return [3 /*break*/, 15];
+                        if (!(_i < _a.length)) return [3 /*break*/, 23];
                         day = _a[_i];
-                        return [4 /*yield*/, this.days.where('id').equals(day.id).first()];
+                        return [4 /*yield*/, this.days.where('date').equals(day.date).first()];
                     case 2:
-                        existingDay = _h.sent();
+                        existingDay = _j.sent();
+                        console.log('day vs existing', day, existingDay);
                         if (!!existingDay) return [3 /*break*/, 4];
+                        // day is unknown, add a new day
                         return [4 /*yield*/, this.days.put({
                                 id: day.id,
                                 date: day.date,
                                 deleted: day.deleted
                             })];
                     case 3:
-                        _h.sent();
+                        // day is unknown, add a new day
+                        _j.sent();
                         result.days++;
-                        _h.label = 4;
-                    case 4:
-                        _b = 0, _c = day.meals;
-                        _h.label = 5;
+                        return [3 /*break*/, 12];
+                    case 4: return [4 /*yield*/, this.meals.where('dayId').equals(existingDay.id).toArray()];
                     case 5:
-                        if (!(_b < _c.length)) return [3 /*break*/, 14];
-                        meal = _c[_b];
+                        meals = _j.sent();
+                        _b = 0, meals_1 = meals;
+                        _j.label = 6;
+                    case 6:
+                        if (!(_b < meals_1.length)) return [3 /*break*/, 9];
+                        meal = meals_1[_b];
+                        updatedMeal = Object.assign({}, meal, { dayId: day.id });
+                        return [4 /*yield*/, this.meals.put(updatedMeal)];
+                    case 7:
+                        _j.sent();
+                        _j.label = 8;
+                    case 8:
+                        _b++;
+                        return [3 /*break*/, 6];
+                    case 9: return [4 /*yield*/, this.days.delete(existingDay.id)];
+                    case 10:
+                        _j.sent();
+                        return [4 /*yield*/, this.days.put(day)];
+                    case 11:
+                        _j.sent();
+                        _j.label = 12;
+                    case 12:
+                        _c = 0, _d = day.meals;
+                        _j.label = 13;
+                    case 13:
+                        if (!(_c < _d.length)) return [3 /*break*/, 22];
+                        meal = _d[_c];
                         return [4 /*yield*/, this.meals.where('id')
                                 .equals(meal.id)
                                 .first()];
-                    case 6:
-                        existingMeal = _h.sent();
-                        if (!!existingMeal) return [3 /*break*/, 8];
+                    case 14:
+                        existingMeal = _j.sent();
+                        console.log('meal vs existing', meal, existingMeal);
+                        if (!(!existingMeal || !this.checkMeals(existingMeal, meal))) return [3 /*break*/, 16];
                         toInsert = {
                             id: meal.id,
                             time: meal.time,
@@ -60899,58 +60982,60 @@ var Database = /** @class */ (function (_super) {
                             deleted: meal.deleted
                         };
                         return [4 /*yield*/, this.meals.put(toInsert)];
-                    case 7:
-                        _h.sent();
+                    case 15:
+                        _j.sent();
                         result.meals++;
-                        _h.label = 8;
-                    case 8:
-                        _d = 0, _e = meal.items;
-                        _h.label = 9;
-                    case 9:
-                        if (!(_d < _e.length)) return [3 /*break*/, 13];
-                        item = _e[_d];
+                        return [3 /*break*/, 16];
+                    case 16:
+                        _e = 0, _f = meal.items;
+                        _j.label = 17;
+                    case 17:
+                        if (!(_e < _f.length)) return [3 /*break*/, 21];
+                        item = _f[_e];
                         return [4 /*yield*/, this.mealItems
                                 .where('id')
                                 .equals(item.id)
                                 .first()];
-                    case 10:
-                        existingItem = _h.sent();
-                        if (!!existingItem) return [3 /*break*/, 12];
+                    case 18:
+                        existingItem = _j.sent();
+                        console.log('item vs existing', item, existingItem);
+                        if (!!existingItem) return [3 /*break*/, 20];
                         i = Object.assign({}, item);
                         i.mealId = meal.id;
                         return [4 /*yield*/, this.mealItems.put(i)];
-                    case 11:
-                        _h.sent();
+                    case 19:
+                        _j.sent();
                         result.items++;
-                        _h.label = 12;
-                    case 12:
-                        _d++;
-                        return [3 /*break*/, 9];
-                    case 13:
-                        _b++;
-                        return [3 /*break*/, 5];
-                    case 14:
+                        _j.label = 20;
+                    case 20:
+                        _e++;
+                        return [3 /*break*/, 17];
+                    case 21:
+                        _c++;
+                        return [3 /*break*/, 13];
+                    case 22:
                         _i++;
                         return [3 /*break*/, 1];
-                    case 15:
-                        _f = 0, _g = archive.bodyHistory;
-                        _h.label = 16;
-                    case 16:
-                        if (!(_f < _g.length)) return [3 /*break*/, 20];
-                        body = _g[_f];
+                    case 23:
+                        _g = 0, _h = archive.bodyHistory;
+                        _j.label = 24;
+                    case 24:
+                        if (!(_g < _h.length)) return [3 /*break*/, 28];
+                        body = _h[_g];
                         return [4 /*yield*/, this.users.where('id').equals(body.id).first()];
-                    case 17:
-                        existingBody = _h.sent();
-                        if (!!existingBody) return [3 /*break*/, 19];
+                    case 25:
+                        existingBody = _j.sent();
+                        console.log('body vs existing', body, existingBody);
+                        if (!(!existingBody || !this.checkBodies(body, existingBody))) return [3 /*break*/, 27];
                         return [4 /*yield*/, this.users.put(body)];
-                    case 18:
-                        _h.sent();
+                    case 26:
+                        _j.sent();
                         result.body++;
-                        _h.label = 19;
-                    case 19:
-                        _f++;
-                        return [3 /*break*/, 16];
-                    case 20:
+                        _j.label = 27;
+                    case 27:
+                        _g++;
+                        return [3 /*break*/, 24];
+                    case 28:
                         if (syncable) {
                             this.syncableChanges.emit();
                         }
@@ -60959,6 +61044,25 @@ var Database = /** @class */ (function (_super) {
                 }
             });
         });
+    };
+    Database.prototype.checkMeals = function (lhs, rhs) {
+        return lhs
+            && rhs
+            && lhs.name === rhs.name
+            && lhs.time.hours === rhs.time.hours
+            && lhs.time.minutes === rhs.time.minutes
+            && lhs.deleted === rhs.deleted;
+    };
+    Database.prototype.checkBodies = function (lhs, rhs) {
+        return lhs
+            && rhs
+            && lhs.activityLevel === rhs.activityLevel
+            && lhs.age === rhs.age
+            && lhs.bodyFatPercentage === rhs.bodyFatPercentage
+            && lhs.deleted === rhs.deleted
+            && lhs.height === rhs.height
+            && lhs.weight === rhs.weight
+            && lhs.weightTarget === rhs.weightTarget;
     };
     Database.prototype.addDropBoxInfo = function (info) {
         return tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"](this, void 0, void 0, function () {
