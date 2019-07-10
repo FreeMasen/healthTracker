@@ -17,6 +17,7 @@ import { AddMealComponent } from './add-meal.component';
 import { AboutComponent } from './about.component';
 import { ImportComponent } from './import.component';
 import { SyncSetupComponent } from './sync-setup.component';
+import { TargetsComponent } from './targets';
 @NgModule({
     declarations: [
         MessageComponent,
@@ -32,6 +33,7 @@ import { SyncSetupComponent } from './sync-setup.component';
         AboutComponent,
         ImportComponent,
         SyncSetupComponent,
+        TargetsComponent,
     ],
     imports: [
         BrowserModule,

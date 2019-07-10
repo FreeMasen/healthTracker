@@ -1,7 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 import { Data, IUser, Day } from './services/data';
 import * as moment from 'moment';
-
+import { TargetsComponent } from './targets';
 @Component({
     selector: 'health-dashboard',
     styleUrls: ['./dashboard.style.scss'],
@@ -12,6 +12,8 @@ export class DashboardComponent {
     today: Day;
     columnsToDisplay = ['updated', 'weight', 'bodyFatPercentage', 'delete', 'edit'];
     mealColumns = ['name', 'time', 'calories', 'carbs', 'fat', 'protein', 'delete', 'edit'];
+    showTargets = false;
+    @ViewChild('targetsChild') targetsChild: TargetsComponent;
     constructor(
         private data: Data
     ) { }
@@ -21,7 +23,8 @@ export class DashboardComponent {
         this.data.renderableChanges.subscribe(async () => {
             this.history = await this.data.getUserHistory();
             this.today = await this.data.getMealsForDay(this.today.date);
-        })
+        });
+        this.targetsChild.hide.subscribe(() => this.setTargets(false));
     }
     remoteEntry(id: string) {
         this.data.removeUserEntry(id).then(() => {
@@ -131,6 +134,10 @@ export class DashboardComponent {
 
     smallScreen(): boolean {
         return Math.max(document.documentElement.clientWidth, window.innerWidth || 0) < 550
+    }
+    setTargets(newValue: boolean) {
+        console.log('setTargets', newValue);
+        this.showTargets = newValue;
     }
 }
 

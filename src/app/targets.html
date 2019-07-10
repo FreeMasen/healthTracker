@@ -1,0 +1,38 @@
+<mat-card *ngIf="metabolicInfo" style="margin-top: 5px;">
+    <mat-card-title style="display: flex; flex-flow: row; justify-content: space-between;align-items:center;">
+        <span>Today's Targets</span>
+        <button (click)="hide.emit()" mat-raised-button>Hide Targets</button>
+    </mat-card-title>
+    <mat-card-content >
+        <div class="meta-rate">
+            <span class="meta-title">
+                Basal (Resting) Metabolic Rate
+            </span>
+            <span class="meta-value">
+                male: {{ metabolicInfo.basalMan }}
+            </span>
+            <span class="meta-value">
+                female: {{ metabolicInfo.basalWoman }}
+            </span>
+        </div>
+        <div class="meta-rate">
+            <span class="meta-title">
+                Caloric Need
+            </span>
+            <span class="meta-value">
+                male: {{ metabolicInfo.needMan }}
+            </span>
+            <span class="meta-value">
+                female: {{ metabolicInfo.needWoman }}
+            </span>
+        </div>
+        <div class="macro-targets">
+            <span class="macro-title">
+                Protein
+            </span>
+            <span class="macro-value">
+                {{ metabolicInfo.proteinTarget }}
+            </span>
+        </div>
+    </mat-card-content>
+</mat-card>

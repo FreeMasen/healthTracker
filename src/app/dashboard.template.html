@@ -125,3 +125,5 @@
         </button>
     </mat-card-footer>
 </mat-card>
+<button *ngIf="!showTargets" mat-raised-button (click)="setTargets(true)" style="margin-top: 5px;">Show Targets</button>
+<targets [hidden]="!showTargets" #targetsChild></targets>
