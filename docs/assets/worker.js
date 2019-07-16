@@ -60547,7 +60547,7 @@ var Database = /** @class */ (function (_super) {
         return tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"](this, void 0, void 0, function () {
             return tslib__WEBPACK_IMPORTED_MODULE_0__["__generator"](this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.users.orderBy('id').last()];
+                    case 0: return [4 /*yield*/, this.users.orderBy('updated').first()];
                     case 1: return [2 /*return*/, _a.sent()];
                 }
             });
