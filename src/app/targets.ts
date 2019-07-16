@@ -1,6 +1,6 @@
 import { Component, OnInit, EventEmitter } from '@angular/core';
 import { Data } from './services/data';
-import { IMetabolismInfo, MetabolismCalculator } from './services/metabolism';
+import { MetabolismCalculator } from './services/metabolism';
 import { IUser } from './services/database';
 @Component({
     selector: 'targets',

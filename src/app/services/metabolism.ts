@@ -6,6 +6,8 @@ export interface IMetabolismInfo {
     needMan: number;
     needWoman: number;
     proteinTarget: number;
+    carbsTarget: number;
+    fatTarget: number;
 }
 @Injectable({
     providedIn: 'root',
@@ -20,12 +22,16 @@ export class MetabolismCalculator {
         const needMan = this.bmrToNeed(basalMan, user.activityLevel as ActivityLevel);
         const needWoman = this.bmrToNeed(basalWoman, user.activityLevel as ActivityLevel);
         const proteinTarget = this.proteinTarget(user);
+        const carbsTarget = this.carbsTarget(((needMan + needWoman) / 2) - 200);
+        const fatTarget = this.fatTarget(((needMan + needWoman) / 2) - 200);
         return {
             basalMan,
             basalWoman,
             needMan,
             needWoman,
             proteinTarget,
+            carbsTarget,
+            fatTarget,
         };
     }
     basalMan(user: IUser) {
@@ -81,5 +87,13 @@ export class MetabolismCalculator {
     proteinTarget(user: IUser): number {
         const lean = 1 - (user.bodyFatPercentage / 100);
         return user.weight * lean;
+    }
+    carbsTarget(cals: number): number {
+        const targetCalories = cals / 2;
+        return targetCalories / 4;
+    }
+    fatTarget(cals: number): number {
+        const targetCalories = cals * 0.3;
+        return targetCalories / 9;
     }
 }

@@ -353,7 +353,7 @@ export class Database extends Dexie {
      * Get the last entry for the user's history
      */
     async getLatestUser(): Promise<IUser> {
-        return await this.users.orderBy('id').last();
+        return await this.users.orderBy('updated').first();
     }
     /**
      * Get the last 50 user history entries

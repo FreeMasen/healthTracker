@@ -1,0 +1,36 @@
+.meta-rate {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 25px 40px;
+    grid-template-areas: 
+        'title title'
+        'male  female';
+    .meta-title {
+        grid-area: title;
+        font-size: 16pt;
+        font-weight: bold;
+    }
+    .meta-value.male {
+        grid-area: male;
+    }
+    .meta-value.female {
+        grid-area: female;
+    }
+}
+
+.macro-targets {
+    display: grid;
+    grid-template-areas: 1fr 1fr 1fr;
+    grid-template-rows: 25px 40px;
+    grid-template-areas: 
+        'title title title'
+        'prot  carb  fat';
+    .macro-title {
+        grid-area: title;
+        font-size: 16pt;
+        font-weight: bold;
+    }
+    .macro-value.prot {
+        grid-area: prot;
+    }
+}

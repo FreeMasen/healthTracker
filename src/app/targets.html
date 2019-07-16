@@ -6,13 +6,13 @@
     <mat-card-content >
         <div class="meta-rate">
             <span class="meta-title">
-                Basal (Resting) Metabolic Rate
+                Resting Metabolic Rate
             </span>
-            <span class="meta-value">
-                male: {{ metabolicInfo.basalMan }}
+            <span class="meta-value male">
+                male: {{ metabolicInfo.basalMan.toFixed(0) }}
             </span>
-            <span class="meta-value">
-                female: {{ metabolicInfo.basalWoman }}
+            <span class="meta-value female">
+                female: {{ metabolicInfo.basalWoman.toFixed(0) }}
             </span>
         </div>
         <div class="meta-rate">
@@ -20,18 +20,24 @@
                 Caloric Need
             </span>
             <span class="meta-value">
-                male: {{ metabolicInfo.needMan }}
+                male: {{ metabolicInfo.needMan.toFixed(0) }}
             </span>
             <span class="meta-value">
-                female: {{ metabolicInfo.needWoman }}
+                female: {{ metabolicInfo.needWoman.toFixed(0) }}
             </span>
         </div>
         <div class="macro-targets">
             <span class="macro-title">
-                Protein
+                Macronutrients
             </span>
-            <span class="macro-value">
-                {{ metabolicInfo.proteinTarget }}
+            <span class="macro-value prot">
+                protein: {{ metabolicInfo.proteinTarget.toFixed(2) }}
+            </span>
+            <span class="macro-value carb">
+                carbs: {{ metabolicInfo.carbsTarget.toFixed(2) }}
+            </span>
+            <span class="macro-value fat">
+                fat: {{ metabolicInfo.fatTarget.toFixed(2) }}
             </span>
         </div>
     </mat-card-content>
