@@ -311,6 +311,17 @@ export class Database extends Dexie {
             mealItems: '$$id,name,mealId',
             dropboxInfo: '$$id',
             dropboxHash: '$$id,timestamp',
+        });
+        this.version(1).stores({
+            foods: '++id,desc,manufacturer',
+            weights: 'id,foodDescId,measurementDesc',
+            seeds: '++id,when,state',
+            users: '$$id,updated',
+            days: '$$id,date',
+            meals: '$$id,dayId,name,time',
+            mealItems: '$$id,name,mealId',
+            dropboxInfo: '$$id',
+            dropboxHash: '$$id,timestamp',
             userPrefs: '$$id',
         });
     }
