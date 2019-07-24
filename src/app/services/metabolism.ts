@@ -58,7 +58,7 @@ export class MetabolismCalculator {
     private basalBase(height: number, weight: number, age: number): number {
         return (10 * weight)
              + (6.25 * height)
-             + (5 * age)
+             - (5 * age);
     }
 
     private inchesToCm(height: number) {
