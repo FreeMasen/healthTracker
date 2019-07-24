@@ -10,11 +10,12 @@ import {
     MatProgressSpinnerModule, MatAutocompleteModule,
 } from '@angular/material';
 import { MatMomentDateModule, } from '@angular/material-moment-adapter';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
 
 @NgModule({
     exports: [
-        MatToolbarModule, MatButtonModule, 
-        MatIconModule, MatMenuModule, 
+        MatToolbarModule, MatButtonModule,
+        MatIconModule, MatMenuModule,
         MatInputModule, MatFormFieldModule,
         MatSnackBarModule, MatProgressBarModule,
         MatCardModule, MatListModule,
@@ -22,6 +23,7 @@ import { MatMomentDateModule, } from '@angular/material-moment-adapter';
         MatTableModule, MatStepperModule,
         MatDatepickerModule, MatMomentDateModule,
         MatProgressSpinnerModule, MatAutocompleteModule,
+        MatButtonToggleModule,
     ],
     imports: [],
 

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import * as moment from 'moment';
-import { Database, IDay, IMeal, ITime, Meal, MealItem, MealName } from './database';
+import { Database, IDay, IMeal, ITime, Meal, MealItem, MealName, MetabolismGender } from './database';
 
 
 export { ActivityLevel, Day, IDay, IFoodDesc, IFoodDetail,
@@ -136,4 +136,5 @@ export class Data extends Database {
         this.renderableChanges.emit();
         this.syncableChanges.emit();
     }
+
 }

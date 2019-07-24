@@ -277,6 +277,13 @@ interface IDbDropboxChanges {
     timestamp: number;
     fileHash: string;
 }
+interface IUserPrefs {
+    metabolismGender: MetabolismGender;
+}
+export enum MetabolismGender {
+    Male = 'Male',
+    Female = 'Female',
+}
 export class Database extends Dexie {
     public syncableChanges = new EventEmitter<void>();
     public renderableChanges = new EventEmitter<void>();
@@ -290,6 +297,7 @@ export class Database extends Dexie {
     public mealItems: Dexie.Table<MealItem, string>;
     public dropboxInfo: Dexie.Table<IDropboxInfo, string>;
     public dropboxHash: Dexie.Table<IDbDropboxChanges, string>;
+    public userPrefs: Dexie.Table<IUserPrefs, string>;
 
     constructor(vers: number) {
         super('nutrition-data');
@@ -302,7 +310,8 @@ export class Database extends Dexie {
             meals: '$$id,dayId,name,time',
             mealItems: '$$id,name,mealId',
             dropboxInfo: '$$id',
-            dropboxHash: '$$id,timestamp'
+            dropboxHash: '$$id,timestamp',
+            userPrefs: '$$id',
         });
     }
     /**
@@ -335,6 +344,7 @@ export class Database extends Dexie {
         await this.users.add(info);
         this.renderableChanges.emit();
     }
+
     async updateUser(user: IUser) {
         const existing = await this.users.get(user.id);
         existing.deleted = true;
@@ -348,6 +358,24 @@ export class Database extends Dexie {
 
         await this.users.put(existing);
         await this.users.add(user);
+    }
+    async getUserPrefs(): Promise<IUserPrefs> {
+        console.log('getting user preferences');
+        return this.userPrefs
+            .limit(1)
+            .first()
+            .then(prefs => prefs || this.defaultPrefs());
+    }
+    async setGenderPref(newValue: MetabolismGender) {
+        const current = await this.getUserPrefs();
+        current.metabolismGender = newValue;
+        await this.userPrefs.put(current);
+        return newValue;
+    }
+    private defaultPrefs(): IUserPrefs {
+        return {
+            metabolismGender: MetabolismGender.Female
+        };
     }
     /**
      * Get the last entry for the user's history

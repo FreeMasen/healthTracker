@@ -1,10 +1,8 @@
 import { Injectable } from '@angular/core';
-import { IUser, ActivityLevel } from './database';
+import { IUser, ActivityLevel, MetabolismGender } from './database';
 export interface IMetabolismInfo {
-    basalMan: number;
-    basalWoman: number;
-    needMan: number;
-    needWoman: number;
+    basal: number;
+    need: number;
     proteinTarget: number;
     carbsTarget: number;
     fatTarget: number;
@@ -16,22 +14,20 @@ export class MetabolismCalculator {
     constructor(
 
     ) {}
-    getMetabolismInfo(user: IUser): IMetabolismInfo {
-        const basalMan = this.basalMan(user);
-        const basalWoman = this.basalWoman(user);
-        const needMan = this.bmrToNeed(basalMan, user.activityLevel as ActivityLevel);
-        const needWoman = this.bmrToNeed(basalWoman, user.activityLevel as ActivityLevel);
-        const proteinTarget = this.proteinTarget(user);
-        const carbsTarget = this.carbsTarget(((needMan + needWoman) / 2) - 200);
-        const fatTarget = this.fatTarget(((needMan + needWoman) / 2) - 200);
+    getMetabolismInfo(user: IUser, gender: MetabolismGender = MetabolismGender.Male): IMetabolismInfo {
+        let basal = 0;
+        if (gender === MetabolismGender.Male) {
+            basal = this.basalMan(user);
+        } else {
+            basal = this.basalWoman(user);
+        }
+        const need = this.bmrToNeed(basal, user.activityLevel as ActivityLevel);
         return {
-            basalMan,
-            basalWoman,
-            needMan,
-            needWoman,
-            proteinTarget,
-            carbsTarget,
-            fatTarget,
+            basal,
+            need,
+            proteinTarget: this.proteinTarget(user),
+            carbsTarget: this.carbsTarget(need),
+            fatTarget: this.fatTarget(need),
         };
     }
     basalMan(user: IUser) {

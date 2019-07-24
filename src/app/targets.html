@@ -4,15 +4,17 @@
         <button (click)="hide.emit()" mat-raised-button>Hide Targets</button>
     </mat-card-title>
     <mat-card-content >
+        <mat-button-toggle-group [value]="genderPref" (change)="setGenderPrefs($event)" name="fontStyle" aria-label="Font Style">
+            <mat-button-toggle [value]="MetabolismGender.Male">Male</mat-button-toggle>
+            <mat-button-toggle [value]="MetabolismGender.Female">Female</mat-button-toggle>
+        </mat-button-toggle-group>
+                  
         <div class="meta-rate">
             <span class="meta-title">
                 Resting Metabolic Rate
             </span>
             <span class="meta-value male">
-                male: {{ metabolicInfo.basalMan.toFixed(0) }}
-            </span>
-            <span class="meta-value female">
-                female: {{ metabolicInfo.basalWoman.toFixed(0) }}
+                {{ metabolicInfo.basal.toFixed(0) }}
             </span>
         </div>
         <div class="meta-rate">
@@ -20,10 +22,7 @@
                 Caloric Need
             </span>
             <span class="meta-value">
-                male: {{ metabolicInfo.needMan.toFixed(0) }}
-            </span>
-            <span class="meta-value">
-                female: {{ metabolicInfo.needWoman.toFixed(0) }}
+                {{ metabolicInfo.need.toFixed(0) }}
             </span>
         </div>
         <div class="macro-targets">
