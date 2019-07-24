@@ -60461,7 +60461,7 @@ var Database = /** @class */ (function (_super) {
             dropboxInfo: '$$id',
             dropboxHash: '$$id,timestamp',
         });
-        _this.version(1).stores({
+        _this.version(2).stores({
             foods: '++id,desc,manufacturer',
             weights: 'id,foodDescId,measurementDesc',
             seeds: '++id,when,state',

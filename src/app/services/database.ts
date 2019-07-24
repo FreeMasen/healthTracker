@@ -312,7 +312,7 @@ export class Database extends Dexie {
             dropboxInfo: '$$id',
             dropboxHash: '$$id,timestamp',
         });
-        this.version(1).stores({
+        this.version(2).stores({
             foods: '++id,desc,manufacturer',
             weights: 'id,foodDescId,measurementDesc',
             seeds: '++id,when,state',
