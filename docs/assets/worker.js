@@ -60285,7 +60285,7 @@ module.exports = function(module) {
 /*!**************************************!*\
   !*** ./src/app/services/database.ts ***!
   \**************************************/
-/*! exports provided: ENERGY_ID, CARBS_ID, SUGAR_ID, FIBER_ID, PROTEIN_ID, FAT_ID, JOULES_ID, ActivityLevel, MealName, Day, Meal, MealItem, Database */
+/*! exports provided: ENERGY_ID, CARBS_ID, SUGAR_ID, FIBER_ID, PROTEIN_ID, FAT_ID, JOULES_ID, ActivityLevel, MealName, Day, Meal, MealItem, MetabolismGender, Database */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -60302,6 +60302,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Day", function() { return Day; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Meal", function() { return Meal; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "MealItem", function() { return MealItem; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "MetabolismGender", function() { return MetabolismGender; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "Database", function() { return Database; });
 /* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! tslib */ "./node_modules/tslib/tslib.es6.js");
 /* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @angular/core */ "./node_modules/@angular/core/fesm5/core.js");
@@ -60438,6 +60439,11 @@ var MealItem = /** @class */ (function () {
     return MealItem;
 }());
 
+var MetabolismGender;
+(function (MetabolismGender) {
+    MetabolismGender["Male"] = "Male";
+    MetabolismGender["Female"] = "Female";
+})(MetabolismGender || (MetabolismGender = {}));
 var Database = /** @class */ (function (_super) {
     tslib__WEBPACK_IMPORTED_MODULE_0__["__extends"](Database, _super);
     function Database(vers) {
@@ -60453,7 +60459,19 @@ var Database = /** @class */ (function (_super) {
             meals: '$$id,dayId,name,time',
             mealItems: '$$id,name,mealId',
             dropboxInfo: '$$id',
-            dropboxHash: '$$id,timestamp'
+            dropboxHash: '$$id,timestamp',
+        });
+        _this.version(1).stores({
+            foods: '++id,desc,manufacturer',
+            weights: 'id,foodDescId,measurementDesc',
+            seeds: '++id,when,state',
+            users: '$$id,updated',
+            days: '$$id,date',
+            meals: '$$id,dayId,name,time',
+            mealItems: '$$id,name,mealId',
+            dropboxInfo: '$$id',
+            dropboxHash: '$$id,timestamp',
+            userPrefs: '$$id',
         });
         return _this;
     }
@@ -60539,6 +60557,40 @@ var Database = /** @class */ (function (_super) {
                 }
             });
         });
+    };
+    Database.prototype.getUserPrefs = function () {
+        return tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"](this, void 0, void 0, function () {
+            var _this = this;
+            return tslib__WEBPACK_IMPORTED_MODULE_0__["__generator"](this, function (_a) {
+                console.log('getting user preferences');
+                return [2 /*return*/, this.userPrefs
+                        .limit(1)
+                        .first()
+                        .then(function (prefs) { return prefs || _this.defaultPrefs(); })];
+            });
+        });
+    };
+    Database.prototype.setGenderPref = function (newValue) {
+        return tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"](this, void 0, void 0, function () {
+            var current;
+            return tslib__WEBPACK_IMPORTED_MODULE_0__["__generator"](this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.getUserPrefs()];
+                    case 1:
+                        current = _a.sent();
+                        current.metabolismGender = newValue;
+                        return [4 /*yield*/, this.userPrefs.put(current)];
+                    case 2:
+                        _a.sent();
+                        return [2 /*return*/, newValue];
+                }
+            });
+        });
+    };
+    Database.prototype.defaultPrefs = function () {
+        return {
+            metabolismGender: MetabolismGender.Female
+        };
     };
     /**
      * Get the last entry for the user's history
