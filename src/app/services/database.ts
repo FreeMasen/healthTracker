@@ -182,6 +182,12 @@ export class Day {
         return this.meals.reduce((a, m) => a + m.protein(), 0);
     }
 
+    sortedMeals(): Meal[] {
+        return this.meals.sort((lhs, rhs) => {
+            return lhs.sortValue() - rhs.sortValue();
+        });
+    }
+
     toJson(): any {
         const ret: any = {
             date: +this.date,
@@ -224,11 +230,32 @@ export class Meal {
         return this.contents.reduce((a, c) => a + c.protein || 0, 0);
     }
 
+    sortValue(): number {
+        let weight = 0;
+        switch (this.name) {
+            case MealName.Lunch:
+                weight = .01;
+                break;
+            case MealName.Tea:
+                weight = .02;
+                break;
+            case MealName.Dinner:
+                weight = .03
+                break;
+            case MealName.Snack:
+                weight = .04;
+                break;
+        }
+        return ((this.time.hours * 60) + this.time.minutes) + weight;
+    }
+
     formattedTime() {
         let hours: number;
         let suffix: string;
         if (this.time.hours > 12) {
             hours = this.time.hours - 12;
+            suffix = 'p';
+        } else if (this.time.hours === 12) {
             suffix = 'p';
         } else {
             hours = this.time.hours;

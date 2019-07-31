@@ -7,7 +7,8 @@
     "build": "ng build --prod --output-path docs --base-href /healthTracker/ && webpack",
     "test": "ng test",
     "lint": "ng lint",
-    "e2e": "ng e2e"
+    "e2e": "ng e2e",
+    "publish": "node publish.js"
   },
   "private": true,
   "dependencies": {

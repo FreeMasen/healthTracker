@@ -8,8 +8,11 @@ async function main() {
         ng += '.cmd';
         wp += '.cmd';
     }
+    console.log('running ng build');
     await runProcess('ng', `${ng} build --prod --output-path docs --base-href /healthTracker/`);
+    console.log('running webpack');
     await runProcess('webpack', wp);
+    console.log('copying index.html into 404.html');
     await copyFile('docs/index.html', 'docs/404.html');
 }
 

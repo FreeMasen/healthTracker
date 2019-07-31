@@ -136,7 +136,6 @@ export class DashboardComponent {
         return Math.max(document.documentElement.clientWidth, window.innerWidth || 0) < 550
     }
     setTargets(newValue: boolean) {
-        console.log('setTargets', newValue);
         this.showTargets = newValue;
     }
 }

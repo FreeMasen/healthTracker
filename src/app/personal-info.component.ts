@@ -78,7 +78,7 @@ export class PersonalInfoComponent implements OnInit {
             bodyFatPercentage: this.bodyFatPercent,
             activityLevel: this.activityLevel,
             weightTarget: this.weightTarget,
-            updated: this.updated,
+            updated: this.updated || moment(),
             deleted: false,
         };
         const id = this.route.snapshot.paramMap.get('id');

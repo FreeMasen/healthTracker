@@ -14,7 +14,7 @@
     </mat-card-title>
 
     <mat-card-content >
-        <mat-table style="width: 100%;" [dataSource]="today.meals">
+        <mat-table style="width: 100%;" [dataSource]="today.sortedMeals()">
                 <ng-container matColumnDef="name">
                     <mat-header-cell *matHeaderCellDef> {{ descHeader }} </mat-header-cell>
                     <mat-cell *matCellDef="let meal"> {{meal.formattedName(smallScreen())}} </mat-cell>
