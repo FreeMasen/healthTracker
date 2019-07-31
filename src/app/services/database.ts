@@ -250,20 +250,16 @@ export class Meal {
     }
 
     formattedTime() {
-        let hours: number;
-        let suffix: string;
-        if (this.time.hours > 12) {
-            hours = this.time.hours - 12;
-            suffix = 'p';
-        } else if (this.time.hours === 12) {
-            suffix = 'p';
-        } else {
-            hours = this.time.hours;
-            suffix = 'a';
-        }
+        const hours = this.time.hours > 12
+            ? this.time.hours - 12
+            : this.time.hours;
+        const suffix = this.time.hours >= 12
+            ? 'p'
+            : 'a';
         const minutes = `0${this.time.minutes}`.substr(-2);
         return `${hours}:${minutes} ${suffix}`;
     }
+
     formattedName(short: boolean): string {
         switch (this.name) {
             case MealName.Breakfast:

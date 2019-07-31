@@ -60358,6 +60358,11 @@ var Day = /** @class */ (function () {
     Day.prototype.protein = function () {
         return this.meals.reduce(function (a, m) { return a + m.protein(); }, 0);
     };
+    Day.prototype.sortedMeals = function () {
+        return this.meals.sort(function (lhs, rhs) {
+            return lhs.sortValue() - rhs.sortValue();
+        });
+    };
     Day.prototype.toJson = function () {
         var ret = {
             date: +this.date,
@@ -60391,11 +60396,32 @@ var Meal = /** @class */ (function () {
     Meal.prototype.protein = function () {
         return this.contents.reduce(function (a, c) { return a + c.protein || 0; }, 0);
     };
+    Meal.prototype.sortValue = function () {
+        var weight = 0;
+        switch (this.name) {
+            case MealName.Lunch:
+                weight = .01;
+                break;
+            case MealName.Tea:
+                weight = .02;
+                break;
+            case MealName.Dinner:
+                weight = .03;
+                break;
+            case MealName.Snack:
+                weight = .04;
+                break;
+        }
+        return ((this.time.hours * 60) + this.time.minutes) + weight;
+    };
     Meal.prototype.formattedTime = function () {
         var hours;
         var suffix;
         if (this.time.hours > 12) {
             hours = this.time.hours - 12;
+            suffix = 'p';
+        }
+        else if (this.time.hours === 12) {
             suffix = 'p';
         }
         else {
