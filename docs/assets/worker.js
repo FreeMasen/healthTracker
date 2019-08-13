@@ -60415,19 +60415,12 @@ var Meal = /** @class */ (function () {
         return ((this.time.hours * 60) + this.time.minutes) + weight;
     };
     Meal.prototype.formattedTime = function () {
-        var hours;
-        var suffix;
-        if (this.time.hours > 12) {
-            hours = this.time.hours - 12;
-            suffix = 'p';
-        }
-        else if (this.time.hours === 12) {
-            suffix = 'p';
-        }
-        else {
-            hours = this.time.hours;
-            suffix = 'a';
-        }
+        var hours = this.time.hours > 12
+            ? this.time.hours - 12
+            : this.time.hours;
+        var suffix = this.time.hours >= 12
+            ? 'p'
+            : 'a';
         var minutes = ("0" + this.time.minutes).substr(-2);
         return hours + ":" + minutes + " " + suffix;
     };
