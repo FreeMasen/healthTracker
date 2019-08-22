@@ -12,6 +12,32 @@ export const PROTEIN_ID = 203;
 export const FAT_ID = 204;
 export const JOULES_ID = 268;
 
+export interface INihFood {
+    id: number;
+    name: string;
+    manufacturer: string;
+    upc: string;
+    serving: IServingInfo;
+    macros: IMacros;
+}
+
+export interface IServingInfo {
+    raw: IServing;
+    household: IServing;
+}
+
+export interface IServing {
+    value: number;
+    unit: string;
+}
+
+export interface IMacros {
+    calories: number;
+    carbs: number;
+    fat: number;
+    protein: number;
+}
+
 export interface IFoodDesc {
     id: number;
     desc: string;
@@ -240,7 +266,7 @@ export class Meal {
                 weight = .02;
                 break;
             case MealName.Dinner:
-                weight = .03
+                weight = .03;
                 break;
             case MealName.Snack:
                 weight = .04;
@@ -294,6 +320,7 @@ export class MealItem {
             this.id = id;
         }
     }
+
 }
 interface IDbDropboxChanges {
     id?: string;
@@ -318,6 +345,7 @@ export class Database extends Dexie {
     public days: Dexie.Table<IDay, string>;
     public meals: Dexie.Table<IMeal, string>;
     public mealItems: Dexie.Table<MealItem, string>;
+    public nihMealItems: Dexie.Table<INihFood, number>;
     public dropboxInfo: Dexie.Table<IDropboxInfo, string>;
     public dropboxHash: Dexie.Table<IDbDropboxChanges, string>;
     public userPrefs: Dexie.Table<IUserPrefs, string>;
@@ -347,6 +375,28 @@ export class Database extends Dexie {
             dropboxHash: '$$id,timestamp',
             userPrefs: '$$id',
         });
+        // this.version(3).stores({
+        //     foods: '++id,desc,manufacturer',
+        //     weights: 'id,foodDescId,measurementDesc',
+        //     seeds: '++id,when,state',
+        //     users: '$$id,updated',
+        //     days: '$$id,date',
+        //     meals: '$$id,dayId,name,time',
+        //     mealItems: '$$id,name,mealId',
+        //     nihMealItems: 'id,name,manufacturer,upc',
+        //     dropboxInfo: '$$id',
+        //     dropboxHash: '$$id,timestamp',
+        //     userPrefs: '$$id',
+        // }).upgrade(async trans => {
+        //     try {
+        //         await this.seedTable(trans.tables['nihMealItems'], 'nutr.json', (ev, n, t, u) => {
+        //             console.log('upgrading', ev, n, t, u)
+        //         });
+        //     } catch (e) {
+        //         console.error(e);
+        //         trans.abort();
+        //     }
+        // });
     }
     /**
      * Check if this database instance has been seeded
@@ -518,7 +568,28 @@ export class Database extends Dexie {
                         .startsWithIgnoreCase(term)
                         .distinct()
                         .sortBy('name');
-        return foods.map(f => new MealItem(f.name, f.calories, f.carbs, f.protein, f.fat, null, f.id));
+        const nihFoods = await this.nihMealItems
+                        .where('name')
+                        .startsWithAnyOfIgnoreCase(term)
+                        .or('manufacturer')
+                        .startsWithAnyOfIgnoreCase(term)
+                        .distinct()
+                        .sortBy('name');
+        const nihMealItems = nihFoods.map(f => new MealItem(
+            f.name, f.macros.calories,
+            f.macros.carbs, f.macros.protein,
+            f.macros.protein
+        ));
+        return foods.map(f =>
+                new MealItem(f.name, f.calories, f.carbs, f.protein, f.fat, null, f.id)
+            ).concat(nihMealItems)
+            .reduce((acc, item) => {
+                if (acc.some(i => i.name === item.name)) {
+                    return acc;
+                }
+                acc.push(item);
+                return acc;
+            }, []);
     }
     /**
      * Get the details for a food from the search
@@ -536,6 +607,7 @@ export class Database extends Dexie {
             await this.seeds.add({when: moment().toISOString(), state: 'start'});
             await this.seedTable(this.foods, 'food_details.json', updateCb);
             await this.seedTable(this.weights, 'weight.json', updateCb);
+            // await this.seedTable(this.nihMealItems, 'nutr.json', updateCb);
             await this.seeds.add({when: moment().toISOString(), state: 'complete'});
 
         } catch (e) {
@@ -598,12 +670,12 @@ export class Database extends Dexie {
 
     async getAllUserData(): Promise<IArchive> {
         const dbDays = await this.days.toArray();
-        let mealHistory = [];
-        for (let day of dbDays) {
-            let dbMeals = await this.meals.where('dayId').equals(day.id).toArray();
-            let meals = [];
-            for (let meal of dbMeals) {
-                let items = await this.mealItems.where('mealId').equals(meal.id).toArray();
+        const mealHistory = [];
+        for (const day of dbDays) {
+            const dbMeals = await this.meals.where('dayId').equals(day.id).toArray();
+            const meals = [];
+            for (const meal of dbMeals) {
+                const items = await this.mealItems.where('mealId').equals(meal.id).toArray();
                 meals.push({
                     id: meal.id,
                     time: meal.time,
@@ -620,7 +692,7 @@ export class Database extends Dexie {
                 deleted: day.deleted,
             });
         }
-        let bodyHistory = await this.users.toArray();
+        const bodyHistory = await this.users.toArray();
         return {
             mealHistory,
             bodyHistory,
@@ -649,9 +721,9 @@ export class Database extends Dexie {
             } else {
                 // We already have that day but let's just overwrite the ID to that of
                 // the archive
-                let meals = await this.meals.where('dayId').equals(existingDay.id).toArray();
-                for (let meal of meals) {
-                    let updatedMeal = Object.assign({}, meal, {dayId: day.id});
+                const meals = await this.meals.where('dayId').equals(existingDay.id).toArray();
+                for (const meal of meals) {
+                    const updatedMeal = Object.assign({}, meal, {dayId: day.id});
                     await this.meals.put(updatedMeal);
                 }
                 await this.days.delete(existingDay.id);
@@ -710,18 +782,18 @@ export class Database extends Dexie {
             && lhs.name === rhs.name
             && lhs.time.hours === rhs.time.hours
             && lhs.time.minutes === rhs.time.minutes
-            && lhs.deleted === rhs.deleted
+            && lhs.deleted === rhs.deleted;
     }
     private checkBodies(lhs: IUser, rhs: IUser): boolean {
-        return lhs 
-            && rhs 
+        return lhs
+            && rhs
             && lhs.activityLevel === rhs.activityLevel
             && lhs.age === rhs.age
             && lhs.bodyFatPercentage === rhs.bodyFatPercentage
             && lhs.deleted === rhs.deleted
             && lhs.height === rhs.height
             && lhs.weight === rhs.weight
-            && lhs.weightTarget === rhs.weightTarget
+            && lhs.weightTarget === rhs.weightTarget;
     }
 
     public async addDropBoxInfo(info: IDropboxInfo) {

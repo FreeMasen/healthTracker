@@ -18,9 +18,7 @@ async function convertCsvToJson(content, id) {
     return new Promise((r, j) => {
         csv(content, {delimiter: ',', columns: true, cast: mapValue}, (err, records) => {
             if (err) return j(err);
-            return r(records.sort((l, r) => {
-                l[id] - r[id]
-            }));
+            return r(records.sort((l, r) => l[id] - r[id]));
         });
     });
 }
@@ -93,18 +91,60 @@ async function writeFile(file, data) {
 }
 const FILES = [
     // ['src/assets/food_desc.csv', 'id'],
-    ['src/assets/food_details.csv', 'id'],
-    ['src/assets/food_groups.csv', 'id'],
+    // ['src/assets/food_details.csv', 'id'],
+    // ['src/assets/food_groups.csv', 'id'],
     // ['src/assets/nut_data.csv', 'id'],
     // ['src/assets/nutr_def.csv', 'nutId'],
-    ['src/assets/weight.csv', 'foodDescId'],
-]
+    // ['src/assets/weight.csv', 'foodDescId'],
+    ['nutr/Nutrients.csv', 'NDB_No'],
+    ['nutr/Products.csv', 'NDB_No'],
+    ['nutr/Serving_size.csv', 'NDB_No'],
+];
+const rl = require('readline');
 async function main() {
     for (let file of FILES) {
-        let content = await readFile(file[0]);
-        let json = await convertCsvToJson(content, file[1]);
+        
+        console.log('starting file', file);
+        // let content = await readFile(file[0]);
+        let json = await csvToObjs(file[0]);
         await writeFile(file[0].substr(0, file[0].length - 3) + 'json', JSON.stringify(json));
     }
+}
+
+async function csvToObjs(file) {
+    const readStream = rl.createInterface({
+        input: fs.createReadStream(file),
+    });
+    let pastHeader = false;
+    let headers = [];
+    let ret = [];
+    for await (const line of readStream) {
+        if (!pastHeader) {
+            headers = line.split(',');
+        }
+        let entry = {};
+        let parts = line.split(',');
+        for (let i = 0; i < headers.length; i++) {
+            entry[headers[i]] = formatEntry(parts[i]);
+        }
+        ret.push(entry);
+    }
+    return ret;
+}
+const zero = '0'.charAt(0);
+const nine = '9'.charAt(0);
+function formatEntry(entry) {
+    if (entry[0] == '"') {
+        entry = entry.substr(1);
+    }
+    if (entry[entry.length - 1] == '"') {
+        entry = entry.substr(0, entry.length - 1);
+    }
+    if (/[^\d]/.exec(entry) === 0)
+    {
+        return parseInt(entry);
+    }
+    return entry;
 }
 
 

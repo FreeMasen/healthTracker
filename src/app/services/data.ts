@@ -24,6 +24,7 @@ export class Data extends Database {
         return [
             'foods',
             'weights',
+            'knownMealItems'
         ];
     }
 
@@ -38,7 +39,15 @@ export class Data extends Database {
             throw new Error('No meal found');
         }
         const items = await this.mealItems.where('mealId').equals(dbMeal.id).toArray();
-        const mealItems = items.map(i => new MealItem(i.name, i.calories, i.carbs, i.protein, i.fat, i.mealId, i.id));
+        const mealItems = items.map(i => new MealItem(
+            i.name,
+            i.calories,
+            i.carbs,
+            i.protein,
+            i.fat,
+            i.mealId, 
+            i.id
+        ));
         return new Meal(dbMeal.name as MealName, dbMeal.time, mealItems, dbMeal.dayId, dbMeal.id);
     }
 

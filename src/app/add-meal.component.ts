@@ -108,7 +108,7 @@ export class AddMealComponent {
         if (typeof v !== 'string') {
             return [];
         }
-        let result = await this.data.findFood(v);
+        const result = await this.data.findFood(v);
         return result.reduce((acc, v) => {
             if (acc.known.has(v.name)) {
                 return acc;
@@ -116,12 +116,20 @@ export class AddMealComponent {
             acc.known.add(v.name);
             acc.ret.push(v);
             return acc;
-        }, {ret: [], known: new Set()}).ret
+        }, {ret: [], known: new Set()}).ret;
     }
 
     addMealItem() {
-        let values = this.addFood.value;
-        this.items = this.items.concat([new MealItem(values.desc, values.calories, values.carbs, values.protein, values.fat)])
+        const values = this.addFood.value;
+        this.items = this.items.concat([new MealItem(
+            values.desc,
+            values.calories,
+            values.carbs,
+            values.protein,
+            values.fat,
+            values.manufacturer || null,
+            values.upc || null)
+        ]);
         this.addFood.reset({desc: '', calories: null, carbs: null, fat: null, protein: null});
     }
 
