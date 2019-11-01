@@ -26,7 +26,7 @@
     "@angular/router": "~7.2.0",
     "angular2-highcharts": "^0.5.5",
     "core-js": "^2.5.4",
-    "csv-parse": "^4.3.3",
+    "csv-parse": "^4.4.6",
     "dexie": "^2.0.4",
     "dexie-observable": "^1.0.0-beta.5",
     "dexie-syncable": "^1.0.0-beta.4",
