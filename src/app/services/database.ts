@@ -418,6 +418,7 @@ export class Database extends Dexie {
         return await this
             .users
             .orderBy('updated')
+            .reverse()
             .and(u => !u.deleted)
             .first();
     }

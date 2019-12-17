@@ -1,6 +1,6 @@
-import { Component, ViewChild } from '@angular/core';
+import { Component, ViewChild, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup } from '@angular/forms';
-import { MealName, MealItem, Data, IFoodDesc } from './services/data';
+import { MealName, MealItem, Data, Meal } from './services/data';
 import { MatStepper } from '@angular/material/stepper';
 import * as moment from 'moment';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -15,7 +15,7 @@ import { Sync } from './services/sync';
     templateUrl: './add-meal.html',
     styleUrls: ['./add-meal.scss']
 })
-export class AddMealComponent {
+export class AddMealComponent implements OnInit {
     mealName: MealName = MealName.Breakfast;
     mealDate: moment.Moment = moment();
     items: MealItem[] = [];
@@ -40,13 +40,13 @@ export class AddMealComponent {
         this.basicInfo = this.builder.group({
             date: this.mealDate,
             time: this.mealDate.format('HH:mm'),
-            name: MealName.Breakfast
+            name: this.mealName,
         });
-        
+
         this.basicInfo.valueChanges.subscribe(change => {
             this.mealName = change.name;
-            let mealDate = change.date;
-            let time = timeToTime(change.time);
+            const mealDate = change.date;
+            const time = timeToTime(change.time);
             mealDate.hours(time.hours);
             mealDate.minutes(time.minutes);
             this.mealDate = mealDate;
@@ -58,11 +58,11 @@ export class AddMealComponent {
             fat: null,
             protein: null,
         });
-        let desc = this.addFood.get('desc');
+        const desc = this.addFood.get('desc');
         this.recommendedFoods = desc.valueChanges.pipe(
             debounceTime(300),
             switchMap((v, i) => this.getRecommendations(v))
-        )
+        );
         this.autoComplete.optionSelected.subscribe(value => {
             this.data.mealItems.get(value.option.value).then(food => {
                 this.addFood.setValue({
@@ -74,7 +74,7 @@ export class AddMealComponent {
                 }, {emitEvent: false, onlySelf: true});
             });
         });
-        let id = this.route.snapshot.paramMap.get('id');
+        const id = this.route.snapshot.paramMap.get('id');
         if (id) {
             console.log('getting info from db');
             let meal;
@@ -84,7 +84,7 @@ export class AddMealComponent {
                 console.log('got meal', meal);
                 day = await this.data.days.get(meal.dayId);
             } catch (e) {
-                console.error('error getting info from db',e);
+                console.error('error getting info from db', e);
             }
             this.mealDate = moment(day.date);
             this.mealDate.hours(meal.time.hours);
@@ -92,8 +92,50 @@ export class AddMealComponent {
             this.setBasicInfo(meal.name);
             this.items = meal.contents;
         }
+        try {
+            const day = await this.data.getTodaysEntries();
+            const name = this.getNextMealFrom(day.meals);
+            this.basicInfo.setValue({date: this.mealDate,
+                time: this.mealDate.format('HH:mm'),
+                name,
+            });
+        } catch (e) {
+            console.error(e);
+        }
         this.loading = false;
         console.log('ngOnInit end');
+    }
+
+    getNextMealFrom(meals: Meal[]): MealName {
+        const reducer = {breakfast: false, lunch: false, dinner: false, tea: false};
+        const {breakfast, lunch, dinner, tea} = meals.reduce((acc, item) => {
+            switch (item.name) {
+                case MealName.Breakfast:
+                    acc.breakfast = true;
+                    break;
+                case MealName.Lunch:
+                    acc.lunch = true;
+                    break;
+                case MealName.Tea:
+                    acc.tea = true;
+                    break;
+                case MealName.Dinner:
+                    acc.dinner = true;
+                    break;
+            }
+            return acc;
+        }, reducer);
+        if (!breakfast) {
+            return MealName.Breakfast;
+        } else if (!lunch) {
+            return MealName.Lunch;
+        } else if (!tea) {
+            return MealName.Tea;
+        } else if (!dinner) {
+            return MealName.Dinner;
+        } else {
+            return MealName.Snack;
+        }
     }
 
     setBasicInfo(name: MealName) {
@@ -104,11 +146,11 @@ export class AddMealComponent {
         });
     }
 
-    async getRecommendations(v: string) {
-        if (typeof v !== 'string') {
+    async getRecommendations(term: string) {
+        if (typeof term !== 'string') {
             return [];
         }
-        let result = await this.data.findFood(v);
+        const result = await this.data.findFood(term);
         return result.reduce((acc, v) => {
             if (acc.known.has(v.name)) {
                 return acc;
@@ -116,17 +158,23 @@ export class AddMealComponent {
             acc.known.add(v.name);
             acc.ret.push(v);
             return acc;
-        }, {ret: [], known: new Set()}).ret
+        }, {ret: [], known: new Set()}).ret;
     }
 
     addMealItem() {
-        let values = this.addFood.value;
-        this.items = this.items.concat([new MealItem(values.desc, values.calories, values.carbs, values.protein, values.fat)])
+        const values = this.addFood.value;
+        this.items = this.items.concat([new MealItem(
+            values.desc,
+            values.calories,
+            values.carbs,
+            values.protein,
+            values.fat)
+        ]);
         this.addFood.reset({desc: '', calories: null, carbs: null, fat: null, protein: null});
     }
 
     removeItem(idx: number) {
-        this.items = this.items.filter((_,i) => i !== idx);
+        this.items = this.items.filter((_, i) => i !== idx);
     }
 
     saveMeal() {
@@ -143,15 +191,24 @@ export class AddMealComponent {
     }
 
     get calories(): number {
-        return this.items.reduce((a, c) => a + c.calories || 0, 0)
+        return this.items.reduce((a, c) => a + c.calories || 0, 0);
     }
     get carbs(): number {
-        return this.items.reduce((a, c) => a + c.carbs || 0, 0)
+        return this.items.reduce((a, c) => a + c.carbs || 0, 0);
     }
     get fat(): number {
-        return this.items.reduce((a, c) => a + c.fat || 0, 0)
+        return this.items.reduce((a, c) => a + c.fat || 0, 0);
     }
     get protein(): number {
-        return this.items.reduce((a, c) => a + c.protein || 0, 0)
+        return this.items.reduce((a, c) => a + c.protein || 0, 0);
+    }
+
+    calcCals() {
+        const values = this.addFood.value;
+        const fromCarbs = values.carbs * 4;
+        const fromProt = values.protein * 4;
+        const fromFat = values.fat * 9;
+        values.calories = fromCarbs + fromProt + fromFat;
+        this.addFood.setValue(values);
     }
 }
