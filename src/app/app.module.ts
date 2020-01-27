@@ -18,6 +18,8 @@ import { AboutComponent } from './about.component';
 import { ImportComponent } from './import.component';
 import { SyncSetupComponent } from './sync-setup.component';
 import { TargetsComponent } from './targets';
+import { WeightSetForm } from './weight-set-form';
+import { WeightSetHistory } from './weight-set-history.component';
 @NgModule({
     declarations: [
         MessageComponent,
@@ -34,6 +36,8 @@ import { TargetsComponent } from './targets';
         ImportComponent,
         SyncSetupComponent,
         TargetsComponent,
+        WeightSetForm,
+        WeightSetHistory,
     ],
     imports: [
         BrowserModule,

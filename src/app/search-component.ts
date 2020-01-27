@@ -26,7 +26,7 @@ export class SearchComponent {
     subscribe() {
         this.term.valueChanges.subscribe(next => {
             if (this.debounce) {
-                clearTimeout(this.debounce);   
+                clearTimeout(this.debounce);
             }
             this.debounce = setTimeout(async () => await this.searchDatabase(), 500);
         });

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import * as moment from 'moment';
-import { Database, IDay, IMeal, ITime, Meal, MealItem, MealName, MetabolismGender } from './database';
+import { Database, IDay, IMeal, ITime, Meal, MealItem, MealName, MetabolismGender, IWeightSet } from './database';
 
 
 export { ActivityLevel, Day, IDay, IFoodDesc, IFoodDetail,
@@ -136,5 +136,50 @@ export class Data extends Database {
         this.renderableChanges.emit();
         this.syncableChanges.emit();
     }
-
+    public async getRecentWeightSets(): Promise<IWeightSet[]> {
+        const names = await this.weightSets.orderBy('name').keys();
+        const exercises = [];
+        for (const name of names) {
+            const last = await this
+                .weightSets
+                .orderBy('when')
+                .reverse()
+                .filter(w => w.name === name)
+                .first();
+            if (typeof last.when === 'number') {
+                last.when = moment(last.when);
+            }
+            exercises.push(last);
+        }
+        return exercises;
+    }
+    public async getWeightSet(id: string): Promise<IWeightSet> {
+        const ret = await this.weightSets.get(id);
+        if (typeof ret.when === 'number') {
+            ret.when = moment(ret.when);
+        }
+        return ret;
+    }
+    public async addWeightSet(set: IWeightSet) {
+        if (typeof set.when !== 'number') {
+            set.when = +set.when;
+        }
+        set.id = await this.weightSets.add(set);
+        this.renderableChanges.emit();
+        this.syncableChanges.emit();
+        return set;
+    }
+    public async updateWeightSet(set: IWeightSet) {
+        if (typeof set.when !== 'number') {
+            set.when = +set.when;
+        }
+        await this.weightSets.put(set, set.id);
+        this.renderableChanges.emit();
+        this.syncableChanges.emit();
+    }
+    public async deleteWeightSet(id: string) {
+        await this.weightSets.delete(id);
+        this.renderableChanges.emit();
+        this.syncableChanges.emit();
+    }
 }

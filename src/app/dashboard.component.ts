@@ -28,19 +28,19 @@ export class DashboardComponent {
     }
     remoteEntry(id: string) {
         this.data.removeUserEntry(id).then(() => {
-            this.history = this.history.filter(e => e.id != id);
+            this.history = this.history.filter(e => e.id !== id);
         });
     }
 
     removeMeal(id: string) {
         this.data.removeMeal(id).then(() => {
-            let newMeals = this.today.meals.filter(m => m.id != id);
+            let newMeals = this.today.meals.filter(m => m.id !== id);
             this.today = new Day(this.today.date, newMeals, this.today.id);
-        })
+        });
     }
 
     prevDay() {
-        let today = moment(this.today.date.toISOString());
+        const today = moment(this.today.date.toISOString());
         today.day(today.day() - 1);
         this.data.getMealsForDay(today).then(day => {
             this.today = day;
@@ -49,7 +49,7 @@ export class DashboardComponent {
 
     nextDay() {
         if (this.canGoForward) {
-            let today = moment(this.today.date.toISOString());
+            const today = moment(this.today.date.toISOString());
             today.day(today.day() + 1);
             this.data.getMealsForDay(today).then(day => {
                 this.today = day;
@@ -58,7 +58,7 @@ export class DashboardComponent {
     }
 
     canGoForward(): boolean {
-        let diff = Math.abs(this.today.date.diff(moment(), 'days'));
+        const diff = Math.abs(this.today.date.diff(moment(), 'days'));
         return Math.floor(diff) < 1;
     }
 
@@ -90,7 +90,7 @@ export class DashboardComponent {
         }
         return 'Calories';
     }
-    
+
     get carbsHeader(): string {
         if (this.smallScreen()) {
             return 'Car';
@@ -133,7 +133,7 @@ export class DashboardComponent {
     }
 
     smallScreen(): boolean {
-        return Math.max(document.documentElement.clientWidth, window.innerWidth || 0) < 550
+        return Math.max(document.documentElement.clientWidth, window.innerWidth || 0) < 550;
     }
     setTargets(newValue: boolean) {
         this.showTargets = newValue;

@@ -307,6 +307,14 @@ export enum MetabolismGender {
     Male = 'Male',
     Female = 'Female',
 }
+export interface IWeightSet {
+    id?: string;
+    name: string;
+    reps: number;
+    weight: number;
+    when: moment.Moment | number;
+}
+
 export class Database extends Dexie {
     public syncableChanges = new EventEmitter<void>();
     public renderableChanges = new EventEmitter<void>();
@@ -321,6 +329,7 @@ export class Database extends Dexie {
     public dropboxInfo: Dexie.Table<IDropboxInfo, string>;
     public dropboxHash: Dexie.Table<IDbDropboxChanges, string>;
     public userPrefs: Dexie.Table<IUserPrefs, string>;
+    public weightSets: Dexie.Table<IWeightSet, string>;
 
     constructor(vers: number) {
         super('nutrition-data');
@@ -346,6 +355,19 @@ export class Database extends Dexie {
             dropboxInfo: '$$id',
             dropboxHash: '$$id,timestamp',
             userPrefs: '$$id',
+        });
+        this.version(3).stores({
+            foods: '++id,desc,manufacturer',
+            weights: 'id,foodDescId,measurementDesc',
+            seeds: '++id,when,state',
+            users: '$$id,updated',
+            days: '$$id,date',
+            meals: '$$id,dayId,name,time',
+            mealItems: '$$id,name,mealId',
+            dropboxInfo: '$$id',
+            dropboxHash: '$$id,timestamp',
+            userPrefs: '$$id',
+            weightSets: '$$id,name,weight,reps,when',
         });
     }
     /**
