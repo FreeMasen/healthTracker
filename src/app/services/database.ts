@@ -150,6 +150,7 @@ export enum MealName {
 export interface IArchive {
     mealHistory: IArchiveDay[];
     bodyHistory: IUser[];
+    weightSetHistory: IWeightSet[];
 }
 
 export class Day {
@@ -621,12 +622,12 @@ export class Database extends Dexie {
 
     async getAllUserData(): Promise<IArchive> {
         const dbDays = await this.days.toArray();
-        let mealHistory = [];
-        for (let day of dbDays) {
-            let dbMeals = await this.meals.where('dayId').equals(day.id).toArray();
-            let meals = [];
-            for (let meal of dbMeals) {
-                let items = await this.mealItems.where('mealId').equals(meal.id).toArray();
+        const mealHistory = [];
+        for (const day of dbDays) {
+            const dbMeals = await this.meals.where('dayId').equals(day.id).toArray();
+            const meals = [];
+            for (const meal of dbMeals) {
+                const items = await this.mealItems.where('mealId').equals(meal.id).toArray();
                 meals.push({
                     id: meal.id,
                     time: meal.time,
@@ -643,10 +644,12 @@ export class Database extends Dexie {
                 deleted: day.deleted,
             });
         }
-        let bodyHistory = await this.users.toArray();
+        const bodyHistory = await this.users.toArray();
+        const weightSetHistory = await this.weightSets.toArray();
         return {
             mealHistory,
             bodyHistory,
+            weightSetHistory,
         };
     }
 
@@ -657,6 +660,7 @@ export class Database extends Dexie {
             meals: 0,
             items: 0,
             body: 0,
+            sets: 0,
         };
         for (const day of archive.mealHistory) {
             const existingDay = await this.days.where('date').equals(day.date).first();
@@ -672,9 +676,9 @@ export class Database extends Dexie {
             } else {
                 // We already have that day but let's just overwrite the ID to that of
                 // the archive
-                let meals = await this.meals.where('dayId').equals(existingDay.id).toArray();
-                for (let meal of meals) {
-                    let updatedMeal = Object.assign({}, meal, {dayId: day.id});
+                const meals = await this.meals.where('dayId').equals(existingDay.id).toArray();
+                for (const meal of meals) {
+                    const updatedMeal = Object.assign({}, meal, {dayId: day.id});
                     await this.meals.put(updatedMeal);
                 }
                 await this.days.delete(existingDay.id);
@@ -719,6 +723,13 @@ export class Database extends Dexie {
             if (!existingBody || !this.checkBodies(body, existingBody)) {
                 await this.users.put(body);
                 result.body++;
+            }
+        }
+        for (const set of archive.weightSetHistory) {
+            const existingSet = await this.weightSets.where('id').equals(set.id).first();
+            if (!existingSet) {
+                await this.weightSets.put(set);
+                result.sets++;
             }
         }
         if (syncable) {

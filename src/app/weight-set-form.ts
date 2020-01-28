@@ -130,7 +130,7 @@ export class WeightSetForm implements OnInit {
                 case 'barbell':
                     v = (result.side * 2) + result.barbell;
                     break;
-                case 'dumbell':
+                case 'dumbbell':
                     v = result.hand * 2;
                     break;
                 case 'bodyWeight':

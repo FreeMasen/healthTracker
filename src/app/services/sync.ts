@@ -97,6 +97,7 @@ export class RawDropboxSync {
             archive = {
                 mealHistory: [],
                 bodyHistory: [],
+                weightSetHistory: []
             };
         }
         const result = await dbx.filesUpload({path: FULL_PATH, contents: JSON.stringify(archive), mode: {'.tag': 'overwrite'}});
@@ -189,7 +190,12 @@ export class Sync {
         if (changes && changes.fileHash !== lastHash) {
             const fromDbx = await this.data.importArchive(changes.archive, false);
             await this.data.saveDropboxChanges(changes);
-            this.msg.send(`Got ${fromDbx.meals} meals with ${fromDbx.items} items and ${fromDbx.body} measurements from dropbox`, false);
+            this.msg.send(
+                `Got ${fromDbx.meals} meals with ${fromDbx.items} items\
+                , ${fromDbx.body} measurements \
+                and ${fromDbx.sets} weight sets from dropbox`
+                , false
+            );
         }
         const update = await this.data.getAllUserData();
         const dbx = new dropbox.Dropbox({accessToken: this.dropboxInfo.token, fetch});
