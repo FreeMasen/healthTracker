@@ -107,7 +107,9 @@ export class WeightSetForm implements OnInit {
                 set.id = this.id;
                 await this.data.updateWeightSet(set);
             } else {
-                await this.data.addWeightSet(set);
+                for (let i = 0; i < this.repeated; i++) {
+                    await this.data.addWeightSet(set);
+                }
             }
         } catch (e) {
             return this.msg.send(`Unable to save new weight set ${e.message}`, true);

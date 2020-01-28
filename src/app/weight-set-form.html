@@ -25,7 +25,7 @@
                 <mat-label>Reps</mat-label>
                 <input matInput required type="number" min="0" matInput formControlName="reps">
             </mat-form-field>
-            <mat-form-field class="weight-set-entry">
+            <mat-form-field class="weight-set-entry" [style.display]="this.id ? 'none' : ''">
                 <mat-label>Repeated</mat-label>
                 <input matInput required type="number" min="1" matInput formControlName="repeated">
             </mat-form-field>
