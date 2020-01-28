@@ -161,12 +161,24 @@ export class Data extends Database {
         return ret;
     }
     public async addWeightSet(set: IWeightSet) {
-        if (typeof set.when !== 'number') {
-            set.when = +set.when;
-        }
+        set = this.sanitizeWeightSet(set);
         set.id = await this.weightSets.add(set);
         this.renderableChanges.emit();
         this.syncableChanges.emit();
+        return set;
+    }
+    public async addWeightSets(sets: IWeightSet[]) {
+        const ids = await this.weightSets
+            .bulkAdd(sets.map(this.sanitizeWeightSet));
+        for (let i = 0; i < ids.length; i++) {
+            sets[i].id = ids[i];
+        }
+        return sets;
+    }
+    private sanitizeWeightSet(set: IWeightSet): IWeightSet {
+        if (typeof set.when === 'number') {
+            set.when = moment(set.when);
+        }
         return set;
     }
     public async updateWeightSet(set: IWeightSet) {
