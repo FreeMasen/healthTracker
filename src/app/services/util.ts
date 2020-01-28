@@ -1,9 +1,10 @@
 import { ITime } from './database';
+import * as moment from 'moment';
 
 export function normalizeString(value: string): string {
     let ret = value[0].toLocaleUpperCase();
-    for (let i = 1;i<value.length;i++) {
-        let char = value[i];
+    for (let i = 1; i < value.length; i++) {
+        const char = value[i];
         if (char.toLocaleUpperCase() === char) {
             ret += ` ${char}`;
         } else {
@@ -38,3 +39,16 @@ export async function readFile(f: File): Promise<string> {
         reader.readAsText(f);
     });
 }
+
+export function smallScreen(): boolean {
+    return Math.max(document.documentElement.clientWidth, window.innerWidth || 0) < 550;
+}
+
+export function formatDate(date: moment.Moment): string {
+    if (smallScreen()) {
+        return date.format('M/D/YY');
+    }
+    return date.format('MMM DD, YYYY');
+}
+
+

@@ -1,6 +1,8 @@
 import { Component, OnInit, EventEmitter } from '@angular/core';
 import { Data } from './services/data';
 import { IWeightSet } from './services/database';
+import * as moment from 'moment';
+import { formatDate } from './services/util';
 
 @Component({
     selector: 'weight-set-history',
@@ -10,7 +12,7 @@ import { IWeightSet } from './services/database';
 export class WeightSetHistory implements OnInit {
     hide = new EventEmitter();
     history: IWeightSet[];
-    columnsToDisplay = ['name', 'weight', 'reps', 'when', 'edit', 'del']
+    columnsToDisplay = ['when', 'name', 'weight', 'reps', 'del', 'edit']
     constructor(
         private data: Data,
     ) {}
@@ -23,5 +25,8 @@ export class WeightSetHistory implements OnInit {
 
     async deleteItem(item: IWeightSet) {
         await this.data.deleteWeightSet(item.id);
+    }
+    formatDate(date: moment.Moment) {
+        return formatDate(date);
     }
 }

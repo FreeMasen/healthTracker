@@ -1,0 +1,11 @@
+.tab-body {
+    display: flex;
+    flex-flow: column;
+    justify-content: flex-start;
+    align-items: center;
+    align-content: center;
+}
+
+#close-button {
+    float: right;
+}

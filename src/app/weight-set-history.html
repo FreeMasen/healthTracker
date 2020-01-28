@@ -4,6 +4,10 @@
     </mat-card-title>
     <mat-card-content *ngIf="history">
         <mat-table style="width: 100%;" [dataSource]="history">
+            <ng-container matColumnDef="when">
+                <mat-header-cell *matHeaderCellDef>When</mat-header-cell>
+                <mat-cell *matCellDef="let set"> {{ formatDate(set.when) || ''}} </mat-cell>
+            </ng-container>
             <ng-container matColumnDef="name">
                 <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
                 <mat-cell *matCellDef="let set"> {{set.name || ''}} </mat-cell>
@@ -16,14 +20,11 @@
                 <mat-header-cell *matHeaderCellDef>Reps</mat-header-cell>
                 <mat-cell *matCellDef="let set"> {{set.reps || ''}} </mat-cell>
             </ng-container>
-            <ng-container matColumnDef="when">
-                <mat-header-cell *matHeaderCellDef>When</mat-header-cell>
-                <mat-cell *matCellDef="let set"> {{set.when.format('YYYY/D/M') || ''}} </mat-cell>
-            </ng-container>
+            
             <ng-container matColumnDef="edit">
                 <mat-header-cell *matHeaderCellDef><mat-icon>edit</mat-icon></mat-header-cell>
                 <mat-cell *matCellDef="let set">
-                    <button style="margin: 5px;" mat-mini-fab routerLink="/meal/weight-sets/{{set.id}}">
+                    <button style="margin: 5px;" mat-mini-fab routerLink="/weight-sets/edit/{{set.id}}">
                         <mat-icon>edit</mat-icon>
                     </button>
                 </mat-cell>

@@ -19,6 +19,7 @@ import { ImportComponent } from './import.component';
 import { SyncSetupComponent } from './sync-setup.component';
 import { TargetsComponent } from './targets';
 import { WeightSetForm } from './weight-set-form';
+import { WeightCalculator } from './weight-set-weight-calculator';
 import { WeightSetHistory } from './weight-set-history.component';
 @NgModule({
     declarations: [
@@ -37,7 +38,11 @@ import { WeightSetHistory } from './weight-set-history.component';
         SyncSetupComponent,
         TargetsComponent,
         WeightSetForm,
+        WeightCalculator,
         WeightSetHistory,
+    ],
+    entryComponents: [
+        WeightCalculator,
     ],
     imports: [
         BrowserModule,

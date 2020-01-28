@@ -1,0 +1,42 @@
+<button id="close-button" mat-icon-button mat-dialog-close><mat-icon>close</mat-icon></button>
+<h1 mat-dialog-title>Weight Calculator</h1>
+<div mat-dialog-content>
+    <mat-tab-group>
+        <mat-tab label="Barbell">
+            <form [formGroup]="barbellForm" class="tab-body">
+                <mat-form-field class="weight-calc-entry">
+                    <mat-label>Barbell Weight</mat-label>
+                    <input matInput required type="number" min="1" formControlName="barbell">
+                </mat-form-field>
+                <mat-form-field class="weight-calc-entry">
+                    <mat-label>Each Side</mat-label>
+                    <input matInput required type="number" min="0" formControlName="barbell-side">
+                </mat-form-field>
+                <button class="use-button" mat-raised-button color="primary" (click)="useBarbell()">
+                    Use Calculation
+                </button>
+            </form>
+        </mat-tab>
+        <mat-tab label="Dumbells">
+            <form [formGroup]="dumbbellForm" class="tab-body">
+            <mat-form-field class="weight-calc-entry">
+                <mat-label>In Each Hand</mat-label>
+                <input matInput required type="number" min="0" matInput formControlName="weight">
+            </mat-form-field>
+            <mat-slide-toggle class="weight-calc-entry" formControlName="two">Used Two?</mat-slide-toggle>
+            <button class="use-button" mat-raised-button color="primary" (click)="useDumbbell()">
+                Use Calculation
+            </button>
+        </form>
+        </mat-tab>
+        <mat-tab label="Body Weight">
+            <div class="tab-body">
+            <span>Your Last Body Weight</span>
+            <span>{{ data.bodyWeight }}</span>
+            <button class="use-button" mat-raised-button color="primary" (click)="useBodyWeight()">
+                Use Body Weight
+            </button>
+        </div>
+        </mat-tab>
+    </mat-tab-group>
+</div>

@@ -182,4 +182,30 @@ export class Data extends Database {
         this.renderableChanges.emit();
         this.syncableChanges.emit();
     }
+    public async getLastWeight(): Promise<number> {
+        return (await this.users
+            .orderBy('updated')
+            .reverse()
+            .limit(50)
+            .and(b => !b.deleted)
+            .first())
+            .weight;
+    }
+
+    public async searchDistinctExerciseNames(name: string): Promise<string[]> {
+        return (await this.weightSets
+            .where('name')
+            .startsWithIgnoreCase(name)
+            .distinct()
+            .toArray())
+            .map(ws => ws.name);
+    }
+
+    public async mostRecentFor(name: string): Promise<IWeightSet> {
+        return await this.weightSets
+            .orderBy('when')
+            .filter(ws => ws.name === name)
+            .reverse()
+            .first();
+    }
 }

@@ -17,7 +17,7 @@
         <mat-table style="width: 100%;" [dataSource]="today.sortedMeals()">
                 <ng-container matColumnDef="name">
                     <mat-header-cell *matHeaderCellDef> {{ descHeader }} </mat-header-cell>
-                    <mat-cell *matCellDef="let meal"> {{meal.formattedName(smallScreen())}} </mat-cell>
+                    <mat-cell *matCellDef="let meal"> {{meal.formattedName(smallScreen)}} </mat-cell>
                     <mat-footer-cell *matFooterCellDef>{{ttlHeader}}</mat-footer-cell>
                 </ng-container>
                 <ng-container matColumnDef="time">
@@ -125,6 +125,6 @@
         </button>
     </mat-card-footer>
 </mat-card>
+<weight-set-history></weight-set-history>
 <button *ngIf="!showTargets" mat-raised-button (click)="setTargets(true)" style="margin-top: 5px;">Show Targets</button>
 <targets [hidden]="!showTargets" #targetsChild></targets>
-<weight-set-history></weight-set-history>
