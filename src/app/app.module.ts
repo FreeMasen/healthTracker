@@ -21,6 +21,8 @@ import { TargetsComponent } from './targets';
 import { WeightSetForm } from './weight-set-form';
 import { WeightCalculator } from './weight-set-weight-calculator';
 import { WeightSetHistory } from './weight-set-history.component';
+import { WorkoutGeneratorComponent } from './workout-generator';
+
 @NgModule({
     declarations: [
         MessageComponent,
@@ -40,9 +42,11 @@ import { WeightSetHistory } from './weight-set-history.component';
         WeightSetForm,
         WeightCalculator,
         WeightSetHistory,
+        WorkoutGeneratorComponent,
     ],
     entryComponents: [
         WeightCalculator,
+        WorkoutGeneratorComponent,
     ],
     imports: [
         BrowserModule,

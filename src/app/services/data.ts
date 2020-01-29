@@ -3,7 +3,78 @@ import * as moment from 'moment';
 import { Database, IDay, IMeal, ITime, IWeightSet, Meal, MealItem, MealName } from './database';
 
 
-export { 
+export enum WorkoutKind {
+    Legs = 'Legs',
+    Back = 'Back',
+    Chest = 'Chest',
+    Shoulders = 'Shoulders',
+    Core = 'Core',
+    Arms = 'Arms',
+}
+
+export interface IWorkoutShape {
+    kind: WorkoutKind;
+    allowFluff: boolean;
+}
+
+export interface IExercise {
+    name: string;
+    kind: WorkoutKind;
+    fluff: boolean;
+}
+
+export class Exercise {
+    constructor(
+        public name: string,
+        public kind: WorkoutKind,
+        public reps: number,
+        public fluff: boolean = false,
+    ) {}
+}
+
+export class ExerciseSet {
+    private count = 0;
+    constructor(
+        public first?: Exercise,
+        public second?: Exercise,
+        public third?: Exercise,
+    ) {
+        if (!!first) {
+            this.count++;
+        }
+        if (!!second) {
+            this.count++;
+        }
+        if (!!third) {
+            this.count++;
+        }
+    }
+
+    public add(ex: Exercise) {
+        switch (this.count) {
+            case 0:
+                this.first = ex;
+                break;
+            case 1:
+                this.second = ex;
+                break;
+            case 2:
+                this.third = ex;
+                break;
+            default:
+                return;
+        }
+        this.count++;
+    }
+}
+
+export class Workout {
+    constructor(
+        public sets: ExerciseSet[],
+    ) {}
+}
+
+export {
     ActivityLevel,
     Day,
     IDay,
@@ -259,15 +330,28 @@ export class Data extends Database {
             .reverse()
             .first();
     }
-}
 
-
-class NameTimePair {
-    constructor(
-        public name: string,
-        public time: number,
-    ) {}
-    valueOf(): string {
-        return `${this.name}-${this.time}`;
+    public getAllWorkoutOptions(): Promise<IExercise[]> {
+        return Promise.resolve([
+            {name: 'Deadlifts', kind: WorkoutKind.Legs, fluff: false},
+            {name: 'Back Squats', kind: WorkoutKind.Legs, fluff: false},
+            {name: 'Lunges', kind: WorkoutKind.Legs, fluff: false},
+            {name: 'Bulgarians', kind: WorkoutKind.Legs, fluff: false},
+            {name: 'Chest Press', kind: WorkoutKind.Chest, fluff: false},
+            {name: 'Peck Flys', kind: WorkoutKind.Chest, fluff: false},
+            {name: 'Overhead Press', kind: WorkoutKind.Shoulders, fluff: false},
+            {name: 'Lat Raises', kind: WorkoutKind.Shoulders, fluff: false},
+            {name: 'Pull Downs', kind: WorkoutKind.Back, fluff: false},
+            {name: 'Hammer Curls', kind: WorkoutKind.Arms, fluff: true},
+            {name: 'Skull Crushers', kind: WorkoutKind.Arms, fluff: true},
+            {name: 'Tricep Pull Down', kind: WorkoutKind.Arms, fluff: true},
+            {name: 'Arnold Press', kind: WorkoutKind.Shoulders, fluff: false},
+            {name: 'Push Ups', kind: WorkoutKind.Chest, fluff: false},
+            {name: 'Leg Raises', kind: WorkoutKind.Core, fluff: false},
+            {name: 'Glute Bridges', kind: WorkoutKind.Core, fluff: false},
+            {name: 'Penguin Crunches', kind: WorkoutKind.Core, fluff: true},
+            {name: 'Plank', kind: WorkoutKind.Core, fluff: false},
+            {name: 'Calve Raises', kind: WorkoutKind.Legs, fluff: true},
+        ]);
     }
 }
