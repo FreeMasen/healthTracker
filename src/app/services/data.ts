@@ -1,11 +1,23 @@
 import { Injectable } from '@angular/core';
 import * as moment from 'moment';
-import { Database, IDay, IMeal, ITime, Meal, MealItem, MealName, MetabolismGender, IWeightSet } from './database';
+import { Database, IDay, IMeal, ITime, IWeightSet, Meal, MealItem, MealName } from './database';
 
 
-export { ActivityLevel, Day, IDay, IFoodDesc, IFoodDetail,
-     IFoodGroup, INutrient, INutritionData, INutritionDefinition,
-     IUser, IWeightInfo, Meal, MealItem, MealName,
+export { 
+    ActivityLevel,
+    Day,
+    IDay,
+    IFoodDesc,
+    IFoodDetail,
+    IFoodGroup,
+    INutrient,
+    INutritionData,
+    INutritionDefinition,
+    IUser,
+    IWeightInfo,
+    Meal,
+    MealItem,
+    MealName
 } from './database';
 
 @Injectable({
@@ -16,6 +28,9 @@ export class Data extends Database {
     constructor() {
         super(1);
         (window as any).db = this;
+        if (!moment) {
+            throw new Error('invalid setup, moment isn\'t getting loaded');
+        }
     }
     /**
      * Get the list of table names required for seeding
@@ -136,22 +151,46 @@ export class Data extends Database {
         this.renderableChanges.emit();
         this.syncableChanges.emit();
     }
-    public async getRecentWeightSets(): Promise<IWeightSet[]> {
-        const names = await this.weightSets.orderBy('name').keys();
-        const exercises = [];
-        for (const name of names) {
-            const last = await this
-                .weightSets
+    public async getRecentWeightSets(): Promise<[IWeightSet, number][]> {
+        let days: {[key: number]: {[key: string]: [IWeightSet, number]}} = {};
+        for (let i = 0; true; i++) {
+            const batch = await this.weightSets
                 .orderBy('when')
                 .reverse()
-                .filter(w => w.name === name)
-                .first();
-            if (typeof last.when === 'number') {
-                last.when = moment(last.when);
+                .limit(50)
+                .offset(i * 50)
+                .toArray();
+            if (batch.length === 0) {
+                break;
             }
-            exercises.push(last);
+            for (const set of batch) {
+                if (typeof set.when === 'number') {
+                    set.when = moment(set.when)
+                        .hour(0)
+                        .minute(0)
+                        .second(0)
+                        .millisecond(0);
+                }
+                if (!days[+set.when]) {
+                    days[+set.when] = {};
+                }
+                if (!days[+set.when][set.name]) {
+                    days[+set.when][set.name] = [set, 1];
+                } else {
+                    days[+set.when][set.name][1]++;
+                }
+            }
         }
-        return exercises;
+        const ret = [];
+        const dates = Object.getOwnPropertyNames(days);
+        dates.sort();
+        for (const dayKey of dates) {
+            const day = days[dayKey];
+            for (const weightKey of Object.getOwnPropertyNames(day)) {
+                ret.push(day[weightKey]);
+            }
+        }
+        return ret;
     }
     public async getWeightSet(id: string): Promise<IWeightSet> {
         const ret = await this.weightSets.get(id);
@@ -161,26 +200,21 @@ export class Data extends Database {
         return ret;
     }
     public async addWeightSet(set: IWeightSet) {
-        set = this.sanitizeWeightSet(set);
+        set.when = +set.when;
         set.id = await this.weightSets.add(set);
         this.renderableChanges.emit();
         this.syncableChanges.emit();
         return set;
     }
     public async addWeightSets(sets: IWeightSet[]) {
-        const ids = await this.weightSets
-            .bulkAdd(sets.map(this.sanitizeWeightSet));
-        for (let i = 0; i < ids.length; i++) {
-            sets[i].id = ids[i];
-        }
-        return sets;
+        sets = sets.map(s => {
+            s.when = +s.when;
+            return s;
+        });
+        await this.weightSets
+            .bulkAdd(sets);
     }
-    private sanitizeWeightSet(set: IWeightSet): IWeightSet {
-        if (typeof set.when === 'number') {
-            set.when = moment(set.when);
-        }
-        return set;
-    }
+
     public async updateWeightSet(set: IWeightSet) {
         if (typeof set.when !== 'number') {
             set.when = +set.when;
@@ -205,12 +239,17 @@ export class Data extends Database {
     }
 
     public async searchDistinctExerciseNames(name: string): Promise<string[]> {
-        return (await this.weightSets
-            .where('name')
-            .startsWithIgnoreCase(name)
-            .distinct()
-            .toArray())
-            .map(ws => ws.name);
+        const records = await this.weightSets
+                .where('name')
+                .startsWithIgnoreCase(name)
+                .toArray();
+        const names = records.reduce(this.searchReducer, new Set());
+        return Array.from(names);
+    }
+
+    private searchReducer(acc: Set<string>, ws: IWeightSet): Set<string> {
+        acc.add(ws.name);
+        return acc;
     }
 
     public async mostRecentFor(name: string): Promise<IWeightSet> {
@@ -219,5 +258,16 @@ export class Data extends Database {
             .filter(ws => ws.name === name)
             .reverse()
             .first();
+    }
+}
+
+
+class NameTimePair {
+    constructor(
+        public name: string,
+        public time: number,
+    ) {}
+    valueOf(): string {
+        return `${this.name}-${this.time}`;
     }
 }

@@ -45,6 +45,9 @@ export function smallScreen(): boolean {
 }
 
 export function formatDate(date: moment.Moment): string {
+    if (typeof date === 'number') {
+        date = moment(date);
+    }
     if (smallScreen()) {
         return date.format('M/D/YY');
     }

@@ -11,8 +11,8 @@ import { formatDate } from './services/util';
 })
 export class WeightSetHistory implements OnInit {
     hide = new EventEmitter();
-    history: IWeightSet[];
-    columnsToDisplay = ['when', 'name', 'weight', 'reps', 'del', 'edit']
+    history: [IWeightSet, number][];
+    columnsToDisplay = ['when', 'count', 'name', 'weight', 'reps', 'del', 'edit']
     constructor(
         private data: Data,
     ) {}

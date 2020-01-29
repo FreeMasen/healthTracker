@@ -19,7 +19,11 @@ export class WeightSetForm implements OnInit {
         name: ['', Validators.required],
         weight: ['0', Validators.min(2.5)],
         reps: ['10', Validators.min(1)],
-        when: [moment().toDate(), Validators.required],
+        when: [moment()
+            .hour(0)
+            .minute(0)
+            .second(0)
+            .millisecond(0).toDate(), Validators.required],
         repeated: ['1', Validators.min(1)],
     });
     id?: string = null;
@@ -50,7 +54,11 @@ export class WeightSetForm implements OnInit {
                 this.name = change.name;
                 this.weight = change.weight;
                 this.reps = change.reps;
-                this.when = moment(change.when);
+                this.when = moment(change.when)
+                    .hour(0)
+                    .minute(0)
+                    .second(0)
+                    .millisecond(0);
                 this.repeated = change.repeated;
             });
             if (!!this.id) {
@@ -90,7 +98,10 @@ export class WeightSetForm implements OnInit {
             name: set.name,
             weight: set.weight,
             reps: set.reps,
-            when: set.when,
+            when: (set.when as moment.Moment).hour(0)
+            .minute(0)
+            .second(0)
+            .millisecond(0),
             repeated: '1',
         }, {emitEvent: true, onlySelf: true});
     }
@@ -100,7 +111,10 @@ export class WeightSetForm implements OnInit {
             name: this.name,
             weight: this.weight,
             reps: this.reps,
-            when: this.when,
+            when: this.when.hour(0)
+            .minute(0)
+            .second(0)
+            .millisecond(0),
         };
         try {
             if (!!this.id) {
