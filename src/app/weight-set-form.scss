@@ -1,0 +1,18 @@
+.weight-set-entry-container {
+    display: flex;
+    flex-flow: column;
+}
+
+.input-with-button-group {
+    display: grid;
+    grid-template-columns: 5fr 1fr;
+    grid-template-rows: 1fr;
+    grid-template-areas: 'input button';
+    mat-form-field {
+        grid-area: input;
+    }
+    #weight-edit-button {
+        grid-area: button;
+        
+    }
+}

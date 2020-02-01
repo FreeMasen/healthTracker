@@ -1,0 +1,54 @@
+<mat-card style="margin-top: 5px;">
+    <mat-card-title style="display: flex; flex-flow: row; justify-content: space-between;align-items:center;">
+        <span>Recent Weight Sets</span>
+    </mat-card-title>
+    <mat-card-content *ngIf="history">
+        <mat-table style="width: 100%;" [dataSource]="history">
+            <ng-container matColumnDef="when">
+                <mat-header-cell *matHeaderCellDef>When</mat-header-cell>
+                <mat-cell *matCellDef="let pair"> {{ formatDate(pair[0].when) || ''}} </mat-cell>
+            </ng-container>
+            <ng-container matColumnDef="count">
+                <mat-header-cell *matHeaderCellDef>Count</mat-header-cell>
+                <mat-cell *matCellDef="let pair"> {{ pair[1] || ''}} </mat-cell>
+            </ng-container>
+            <ng-container matColumnDef="name">
+                <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
+                <mat-cell *matCellDef="let pair"> {{pair[0].name || ''}} </mat-cell>
+            </ng-container>
+            <ng-container matColumnDef="weight">
+                <mat-header-cell *matHeaderCellDef>Weight</mat-header-cell>
+                <mat-cell *matCellDef="let pair"> {{pair[0].weight || ''}} </mat-cell>
+            </ng-container>
+            <ng-container matColumnDef="reps">
+                <mat-header-cell *matHeaderCellDef>Reps</mat-header-cell>
+                <mat-cell *matCellDef="let pair"> {{pair[0].reps || ''}} </mat-cell>
+            </ng-container>
+            
+            <ng-container matColumnDef="edit">
+                <mat-header-cell *matHeaderCellDef><mat-icon>edit</mat-icon></mat-header-cell>
+                <mat-cell *matCellDef="let pair">
+                    <button style="margin: 5px;" mat-mini-fab routerLink="/weight-sets/edit/{{pair[0].id}}">
+                        <mat-icon>edit</mat-icon>
+                    </button>
+                </mat-cell>
+            </ng-container>
+            <ng-container matColumnDef="del">
+                <mat-header-cell *matHeaderCellDef><mat-icon>delete</mat-icon></mat-header-cell>
+                <mat-cell *matCellDef="let pair">
+                    <button style="margin: 5px;" mat-mini-fab (click)="deleteItem(pair[0])">
+                        <mat-icon>delete</mat-icon>
+                    </button>
+                </mat-cell>
+            </ng-container>
+            <mat-row *matHeaderRowDef="columnsToDisplay"></mat-row>
+            <mat-row *matRowDef="let myRowData; columns: columnsToDisplay"></mat-row>
+        </mat-table>
+
+    </mat-card-content>
+    <mat-card-footer style="display: flex;flex-flow: row; justify-content: flex-end;">
+        <button style="margin: 5px;" mat-mini-fab routerLink="/weight-sets/add">
+            <mat-icon>add</mat-icon>
+        </button>
+    </mat-card-footer>
+</mat-card>

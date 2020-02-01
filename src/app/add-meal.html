@@ -56,6 +56,11 @@
                 <mat-icon>add</mat-icon>
             </button>
         </form>
+        <button 
+            title="Calculate the calories from the macro nutrient numbers provided" 
+            (click)="calcCals()"
+            mat-button
+        >Calculate Calories</button>
         <mat-table style="width: 100%;" [dataSource]="items">
             <ng-container matColumnDef="name">
                 <mat-header-cell *matHeaderCellDef> Description </mat-header-cell>

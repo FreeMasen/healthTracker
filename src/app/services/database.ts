@@ -176,6 +176,7 @@ export enum MealName {
 export interface IArchive {
     mealHistory: IArchiveDay[];
     bodyHistory: IUser[];
+    weightSetHistory: IWeightSet[];
 }
 
 export class Day {
@@ -334,6 +335,14 @@ export enum MetabolismGender {
     Male = 'Male',
     Female = 'Female',
 }
+export interface IWeightSet {
+    id?: string;
+    name: string;
+    reps: number;
+    weight: number;
+    when: moment.Moment | number;
+}
+
 export class Database extends Dexie {
     public syncableChanges = new EventEmitter<void>();
     public renderableChanges = new EventEmitter<void>();
@@ -349,6 +358,7 @@ export class Database extends Dexie {
     public dropboxInfo: Dexie.Table<IDropboxInfo, string>;
     public dropboxHash: Dexie.Table<IDbDropboxChanges, string>;
     public userPrefs: Dexie.Table<IUserPrefs, string>;
+    public weightSets: Dexie.Table<IWeightSet, string>;
 
     constructor(vers: number) {
         super('nutrition-data');
@@ -375,28 +385,19 @@ export class Database extends Dexie {
             dropboxHash: '$$id,timestamp',
             userPrefs: '$$id',
         });
-        // this.version(3).stores({
-        //     foods: '++id,desc,manufacturer',
-        //     weights: 'id,foodDescId,measurementDesc',
-        //     seeds: '++id,when,state',
-        //     users: '$$id,updated',
-        //     days: '$$id,date',
-        //     meals: '$$id,dayId,name,time',
-        //     mealItems: '$$id,name,mealId',
-        //     nihMealItems: 'id,name,manufacturer,upc',
-        //     dropboxInfo: '$$id',
-        //     dropboxHash: '$$id,timestamp',
-        //     userPrefs: '$$id',
-        // }).upgrade(async trans => {
-        //     try {
-        //         await this.seedTable(trans.tables['nihMealItems'], 'nutr.json', (ev, n, t, u) => {
-        //             console.log('upgrading', ev, n, t, u)
-        //         });
-        //     } catch (e) {
-        //         console.error(e);
-        //         trans.abort();
-        //     }
-        // });
+        this.version(3).stores({
+            foods: '++id,desc,manufacturer',
+            weights: 'id,foodDescId,measurementDesc',
+            seeds: '++id,when,state',
+            users: '$$id,updated',
+            days: '$$id,date',
+            meals: '$$id,dayId,name,time',
+            mealItems: '$$id,name,mealId',
+            dropboxInfo: '$$id',
+            dropboxHash: '$$id,timestamp',
+            userPrefs: '$$id',
+            weightSets: '$$id,name,weight,reps,when',
+        });
     }
     /**
      * Check if this database instance has been seeded
@@ -468,6 +469,7 @@ export class Database extends Dexie {
         return await this
             .users
             .orderBy('updated')
+            .reverse()
             .and(u => !u.deleted)
             .first();
     }
@@ -693,9 +695,11 @@ export class Database extends Dexie {
             });
         }
         const bodyHistory = await this.users.toArray();
+        const weightSetHistory = await this.weightSets.toArray();
         return {
             mealHistory,
             bodyHistory,
+            weightSetHistory,
         };
     }
 
@@ -706,6 +710,7 @@ export class Database extends Dexie {
             meals: 0,
             items: 0,
             body: 0,
+            sets: 0,
         };
         for (const day of archive.mealHistory) {
             const existingDay = await this.days.where('date').equals(day.date).first();
@@ -768,6 +773,13 @@ export class Database extends Dexie {
             if (!existingBody || !this.checkBodies(body, existingBody)) {
                 await this.users.put(body);
                 result.body++;
+            }
+        }
+        for (const set of archive.weightSetHistory) {
+            const existingSet = await this.weightSets.where('id').equals(set.id).first();
+            if (!existingSet) {
+                await this.weightSets.put(set);
+                result.sets++;
             }
         }
         if (syncable) {

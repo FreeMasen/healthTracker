@@ -20,11 +20,9 @@ export class ImportComponent {
         private router: Router,
         private location: Location,
     ) { }
-    ngOnInit() {
-    }
     async fileSelected() {
-        let file = this.importFile.nativeElement.files[0];
-        let json = await readFile(file);
+        const file = this.importFile.nativeElement.files[0];
+        const json = await readFile(file);
         let data: IArchive;
         try {
             data = JSON.parse(json);
@@ -33,22 +31,23 @@ export class ImportComponent {
             this.msg.send('failed to import file, unable to parse json', true);
             return;
         }
-        let mapped = {
-            mealHistory: data.mealHistory.map(h => {
-                if (typeof h.id !== 'string') {
-                    delete h.id;
-                }
-                return h
-            }),
-            bodyHistory: data.bodyHistory.map(h => {
-                if (typeof h.id !== 'string') {
-                    delete h.id
-                }
-                return h
-            }),
+        const mapped: IArchive = {
+            mealHistory: data.mealHistory.map(this.sanitizeId),
+            bodyHistory: data.bodyHistory.map(this.sanitizeId),
+            weightSetHistory: data.weightSetHistory.map(this.sanitizeId)
         };
-        let res = await this.data.importArchive(mapped);
+        const res = await this.data.importArchive(mapped);
         this.msg.send(`Import complete, added ${res.meals} meals, ${res.items} meal items and ${res.body} body compositions`, false);
-        this.location.back()
+        this.location.back();
     }
+    private sanitizeId<T>(obj: T): T {
+        if (typeof (obj as any).id !== 'string') {
+            delete (obj as any).id;
+        }
+        return obj;
+    }
+}
+
+interface IIdentified {
+    id: any;
 }
