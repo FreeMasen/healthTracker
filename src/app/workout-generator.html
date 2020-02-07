@@ -1,19 +1,25 @@
-<mat-card style="margin-top: 5px;">
-    <mat-card-title style="display: flex; flex-flow: row; justify-content: space-between;align-items:center;">
-        <span>Workout Generator</span>
-    </mat-card-title>
+<div style="margin-top: 5px; width: 500px;">
+    <h3 style="font-weight: bold;font-family: Roboto,'Helvetica Neue',sans-serif;">Workout Generator</h3>
     <button mat-raised-button color="primary" (click)="generateWorkout()">Generate</button>
-    <mat-card-content *ngIf="workout">
-        <div *ngFor="let set of workout.sets">
-            <div *ngIf="set.first">
-                <span>{{set.first.name}} {{set.first.reps}}</span>
-            </div>
-            <div *ngIf="set.second">
-                <span>{{set.second.name}} {{set.second.reps}}</span>
-            </div>
-            <div *ngIf="set.thrid">
-                <span>{{set.thrid.name}} {{set.thrid.reps}}</span>
-            </div>
-        </div>
-    </mat-card-content>
-</mat-card>
+    <div style="display: flex;flex-flow: row wrap;margin-top: 5px;" *ngIf="workout">
+        <mat-card *ngFor="let set of workout.sets; index as i" style="width: 150px;margin: 0 auto 5px;">
+            <mat-card-title>Circuit {{ i + 1 }}</mat-card-title>
+            <mat-card-content>
+                <mat-list class="workout-list">
+                    <div mat-list-item class="workout-set title">
+                        <span class="workout-name">Exercise</span><span class="workout-reps">Reps</span>
+                    </div>
+                    <div mat-list-item class="workout-set" *ngIf="set.first">
+                        <span class="workout-name">{{set.first.name}}</span><span class="workout-reps">{{set.first.reps}}</span>
+                    </div>
+                    <div mat-list-item class="workout-set" *ngIf="set.second">
+                        <span class="workout-name">{{set.second.name}}</span><span class="workout-reps">{{set.second.reps}}</span>
+                    </div>
+                    <div mat-list-item class="workout-set" *ngIf="set.third">
+                        <span class="workout-name">{{set.third.name}}</span><span class="workout-reps">{{set.third.reps}}</span>
+                    </div>
+                </mat-list>
+            </mat-card-content>
+        </mat-card>
+    </div>
+</div>

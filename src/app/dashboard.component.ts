@@ -3,6 +3,9 @@ import { Data, IUser, Day } from './services/data';
 import * as moment from 'moment';
 import { TargetsComponent } from './targets';
 import { smallScreen, formatDate } from './services/util';
+import { MatDialog } from '@angular/material';
+import { WorkoutGeneratorComponent } from './workout-generator';
+
 @Component({
     selector: 'health-dashboard',
     styleUrls: ['./dashboard.style.scss'],
@@ -19,7 +22,8 @@ export class DashboardComponent implements OnInit {
         return smallScreen();
     }
     constructor(
-        private data: Data
+        private data: Data,
+        public workoutGenDialog: MatDialog,
     ) { }
     async ngOnInit() {
         this.history = await this.data.getUserHistory();
@@ -135,6 +139,12 @@ export class DashboardComponent implements OnInit {
 
     setTargets(newValue: boolean) {
         this.showTargets = newValue;
+    }
+
+    showWorkoutGenerator() {
+        this.workoutGenDialog.open(WorkoutGeneratorComponent, {
+
+        });
     }
 }
 

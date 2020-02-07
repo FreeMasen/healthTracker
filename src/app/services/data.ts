@@ -97,7 +97,7 @@ export {
 export class Data extends Database {
 
     constructor() {
-        super(1);
+        super();
         (window as any).db = this;
         if (!moment) {
             throw new Error('invalid setup, moment isn\'t getting loaded');

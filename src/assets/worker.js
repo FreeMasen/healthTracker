@@ -471,7 +471,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var rxjs__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! rxjs */ "./node_modules/rxjs/_esm5/index.js");
 /* harmony import */ var rxjs_operators__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! rxjs/operators */ "./node_modules/rxjs/_esm5/operators/index.js");
 /**
- * @license Angular v7.2.15
+ * @license Angular v7.2.16
  * (c) 2010-2019 Google LLC. https://angular.io/
  * License: MIT
  */
@@ -11216,7 +11216,7 @@ var Version = /** @class */ (function () {
 /**
  * @publicApi
  */
-var VERSION = new Version('7.2.15');
+var VERSION = new Version('7.2.16');
 
 /**
  * @license
@@ -60465,7 +60465,7 @@ var MetabolismGender;
 })(MetabolismGender || (MetabolismGender = {}));
 var Database = /** @class */ (function (_super) {
     tslib__WEBPACK_IMPORTED_MODULE_0__["__extends"](Database, _super);
-    function Database(vers) {
+    function Database() {
         var _this = _super.call(this, 'nutrition-data') || this;
         _this.syncableChanges = new _angular_core__WEBPACK_IMPORTED_MODULE_1__["EventEmitter"]();
         _this.renderableChanges = new _angular_core__WEBPACK_IMPORTED_MODULE_1__["EventEmitter"]();
@@ -60491,6 +60491,19 @@ var Database = /** @class */ (function (_super) {
             dropboxInfo: '$$id',
             dropboxHash: '$$id,timestamp',
             userPrefs: '$$id',
+        });
+        _this.version(3).stores({
+            foods: '++id,desc,manufacturer',
+            weights: 'id,foodDescId,measurementDesc',
+            seeds: '++id,when,state',
+            users: '$$id,updated',
+            days: '$$id,date',
+            meals: '$$id,dayId,name,time',
+            mealItems: '$$id,name,mealId',
+            dropboxInfo: '$$id',
+            dropboxHash: '$$id,timestamp',
+            userPrefs: '$$id',
+            weightSets: '$$id,name,weight,reps,when',
         });
         return _this;
     }
@@ -60621,6 +60634,7 @@ var Database = /** @class */ (function (_super) {
                     case 0: return [4 /*yield*/, this
                             .users
                             .orderBy('updated')
+                            .reverse()
                             .and(function (u) { return !u.deleted; })
                             .first()];
                     case 1: return [2 /*return*/, _a.sent()];
@@ -60772,7 +60786,7 @@ var Database = /** @class */ (function (_super) {
      */
     Database.prototype.findFood = function (term) {
         return tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"](this, void 0, void 0, function () {
-            var foods;
+            var foods, nihFoods, nihMealItems;
             return tslib__WEBPACK_IMPORTED_MODULE_0__["__generator"](this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.mealItems
@@ -60782,7 +60796,26 @@ var Database = /** @class */ (function (_super) {
                             .sortBy('name')];
                     case 1:
                         foods = _a.sent();
-                        return [2 /*return*/, foods.map(function (f) { return new MealItem(f.name, f.calories, f.carbs, f.protein, f.fat, null, f.id); })];
+                        return [4 /*yield*/, this.nihMealItems
+                                .where('name')
+                                .startsWithAnyOfIgnoreCase(term)
+                                .or('manufacturer')
+                                .startsWithAnyOfIgnoreCase(term)
+                                .distinct()
+                                .sortBy('name')];
+                    case 2:
+                        nihFoods = _a.sent();
+                        nihMealItems = nihFoods.map(function (f) { return new MealItem(f.name, f.macros.calories, f.macros.carbs, f.macros.protein, f.macros.protein); });
+                        return [2 /*return*/, foods.map(function (f) {
+                                return new MealItem(f.name, f.calories, f.carbs, f.protein, f.fat, null, f.id);
+                            }).concat(nihMealItems)
+                                .reduce(function (acc, item) {
+                                if (acc.some(function (i) { return i.name === item.name; })) {
+                                    return acc;
+                                }
+                                acc.push(item);
+                                return acc;
+                            }, [])];
                 }
             });
         });
@@ -60822,8 +60855,10 @@ var Database = /** @class */ (function (_super) {
                         return [4 /*yield*/, this.seedTable(this.weights, 'weight.json', updateCb)];
                     case 4:
                         _a.sent();
+                        // await this.seedTable(this.nihMealItems, 'nutr.json', updateCb);
                         return [4 /*yield*/, this.seeds.add({ when: moment__WEBPACK_IMPORTED_MODULE_3__().toISOString(), state: 'complete' })];
                     case 5:
+                        // await this.seedTable(this.nihMealItems, 'nutr.json', updateCb);
                         _a.sent();
                         return [3 /*break*/, 7];
                     case 6:
@@ -60920,7 +60955,7 @@ var Database = /** @class */ (function (_super) {
     };
     Database.prototype.getAllUserData = function () {
         return tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"](this, void 0, void 0, function () {
-            var dbDays, mealHistory, _i, dbDays_1, day, dbMeals, meals, _a, dbMeals_1, meal, items, bodyHistory;
+            var dbDays, mealHistory, _i, dbDays_1, day, dbMeals, meals, _a, dbMeals_1, meal, items, bodyHistory, weightSetHistory;
             return tslib__WEBPACK_IMPORTED_MODULE_0__["__generator"](this, function (_b) {
                 switch (_b.label) {
                     case 0: return [4 /*yield*/, this.days.toArray()];
@@ -60970,9 +61005,13 @@ var Database = /** @class */ (function (_super) {
                     case 9: return [4 /*yield*/, this.users.toArray()];
                     case 10:
                         bodyHistory = _b.sent();
+                        return [4 /*yield*/, this.weightSets.toArray()];
+                    case 11:
+                        weightSetHistory = _b.sent();
                         return [2 /*return*/, {
                                 mealHistory: mealHistory,
                                 bodyHistory: bodyHistory,
+                                weightSetHistory: weightSetHistory,
                             }];
                 }
             });
@@ -60981,9 +61020,9 @@ var Database = /** @class */ (function (_super) {
     Database.prototype.importArchive = function (archive, syncable) {
         if (syncable === void 0) { syncable = true; }
         return tslib__WEBPACK_IMPORTED_MODULE_0__["__awaiter"](this, void 0, void 0, function () {
-            var result, _i, _a, day, existingDay, meals, _b, meals_1, meal, updatedMeal, _c, _d, meal, existingMeal, toInsert, _e, _f, item, existingItem, i, _g, _h, body, existingBody;
-            return tslib__WEBPACK_IMPORTED_MODULE_0__["__generator"](this, function (_j) {
-                switch (_j.label) {
+            var result, _i, _a, day, existingDay, meals, _b, meals_1, meal, updatedMeal, _c, _d, meal, existingMeal, toInsert, _e, _f, item, existingItem, i, _g, _h, body, existingBody, _j, _k, set, existingSet;
+            return tslib__WEBPACK_IMPORTED_MODULE_0__["__generator"](this, function (_l) {
+                switch (_l.label) {
                     case 0:
                         console.log('importArchive', archive, syncable);
                         result = {
@@ -60991,15 +61030,16 @@ var Database = /** @class */ (function (_super) {
                             meals: 0,
                             items: 0,
                             body: 0,
+                            sets: 0,
                         };
                         _i = 0, _a = archive.mealHistory;
-                        _j.label = 1;
+                        _l.label = 1;
                     case 1:
                         if (!(_i < _a.length)) return [3 /*break*/, 23];
                         day = _a[_i];
                         return [4 /*yield*/, this.days.where('date').equals(day.date).first()];
                     case 2:
-                        existingDay = _j.sent();
+                        existingDay = _l.sent();
                         console.log('day vs existing', day, existingDay);
                         if (!!existingDay) return [3 /*break*/, 4];
                         // day is unknown, add a new day
@@ -61010,35 +61050,35 @@ var Database = /** @class */ (function (_super) {
                             })];
                     case 3:
                         // day is unknown, add a new day
-                        _j.sent();
+                        _l.sent();
                         result.days++;
                         return [3 /*break*/, 12];
                     case 4: return [4 /*yield*/, this.meals.where('dayId').equals(existingDay.id).toArray()];
                     case 5:
-                        meals = _j.sent();
+                        meals = _l.sent();
                         _b = 0, meals_1 = meals;
-                        _j.label = 6;
+                        _l.label = 6;
                     case 6:
                         if (!(_b < meals_1.length)) return [3 /*break*/, 9];
                         meal = meals_1[_b];
                         updatedMeal = Object.assign({}, meal, { dayId: day.id });
                         return [4 /*yield*/, this.meals.put(updatedMeal)];
                     case 7:
-                        _j.sent();
-                        _j.label = 8;
+                        _l.sent();
+                        _l.label = 8;
                     case 8:
                         _b++;
                         return [3 /*break*/, 6];
                     case 9: return [4 /*yield*/, this.days.delete(existingDay.id)];
                     case 10:
-                        _j.sent();
+                        _l.sent();
                         return [4 /*yield*/, this.days.put(day)];
                     case 11:
-                        _j.sent();
-                        _j.label = 12;
+                        _l.sent();
+                        _l.label = 12;
                     case 12:
                         _c = 0, _d = day.meals;
-                        _j.label = 13;
+                        _l.label = 13;
                     case 13:
                         if (!(_c < _d.length)) return [3 /*break*/, 22];
                         meal = _d[_c];
@@ -61046,7 +61086,7 @@ var Database = /** @class */ (function (_super) {
                                 .equals(meal.id)
                                 .first()];
                     case 14:
-                        existingMeal = _j.sent();
+                        existingMeal = _l.sent();
                         console.log('meal vs existing', meal, existingMeal);
                         if (!(!existingMeal || !this.checkMeals(existingMeal, meal))) return [3 /*break*/, 16];
                         toInsert = {
@@ -61058,12 +61098,12 @@ var Database = /** @class */ (function (_super) {
                         };
                         return [4 /*yield*/, this.meals.put(toInsert)];
                     case 15:
-                        _j.sent();
+                        _l.sent();
                         result.meals++;
                         return [3 /*break*/, 16];
                     case 16:
                         _e = 0, _f = meal.items;
-                        _j.label = 17;
+                        _l.label = 17;
                     case 17:
                         if (!(_e < _f.length)) return [3 /*break*/, 21];
                         item = _f[_e];
@@ -61072,16 +61112,16 @@ var Database = /** @class */ (function (_super) {
                                 .equals(item.id)
                                 .first()];
                     case 18:
-                        existingItem = _j.sent();
+                        existingItem = _l.sent();
                         console.log('item vs existing', item, existingItem);
                         if (!!existingItem) return [3 /*break*/, 20];
                         i = Object.assign({}, item);
                         i.mealId = meal.id;
                         return [4 /*yield*/, this.mealItems.put(i)];
                     case 19:
-                        _j.sent();
+                        _l.sent();
                         result.items++;
-                        _j.label = 20;
+                        _l.label = 20;
                     case 20:
                         _e++;
                         return [3 /*break*/, 17];
@@ -61093,24 +61133,42 @@ var Database = /** @class */ (function (_super) {
                         return [3 /*break*/, 1];
                     case 23:
                         _g = 0, _h = archive.bodyHistory;
-                        _j.label = 24;
+                        _l.label = 24;
                     case 24:
                         if (!(_g < _h.length)) return [3 /*break*/, 28];
                         body = _h[_g];
                         return [4 /*yield*/, this.users.where('id').equals(body.id).first()];
                     case 25:
-                        existingBody = _j.sent();
+                        existingBody = _l.sent();
                         console.log('body vs existing', body, existingBody);
                         if (!(!existingBody || !this.checkBodies(body, existingBody))) return [3 /*break*/, 27];
                         return [4 /*yield*/, this.users.put(body)];
                     case 26:
-                        _j.sent();
+                        _l.sent();
                         result.body++;
-                        _j.label = 27;
+                        _l.label = 27;
                     case 27:
                         _g++;
                         return [3 /*break*/, 24];
                     case 28:
+                        _j = 0, _k = archive.weightSetHistory;
+                        _l.label = 29;
+                    case 29:
+                        if (!(_j < _k.length)) return [3 /*break*/, 33];
+                        set = _k[_j];
+                        return [4 /*yield*/, this.weightSets.where('id').equals(set.id).first()];
+                    case 30:
+                        existingSet = _l.sent();
+                        if (!!existingSet) return [3 /*break*/, 32];
+                        return [4 /*yield*/, this.weightSets.put(set)];
+                    case 31:
+                        _l.sent();
+                        result.sets++;
+                        _l.label = 32;
+                    case 32:
+                        _j++;
+                        return [3 /*break*/, 29];
+                    case 33:
                         if (syncable) {
                             this.syncableChanges.emit();
                         }
@@ -61209,7 +61267,7 @@ __webpack_require__.r(__webpack_exports__);
 /// <reference lib="webworker" />
 
 (function () {
-    var db = new _src_app_services_database__WEBPACK_IMPORTED_MODULE_0__["Database"](1);
+    var db = new _src_app_services_database__WEBPACK_IMPORTED_MODULE_0__["Database"]();
     db.seed(function (event, table, target, value) {
         postMessage({ event: event, table: table, target: target, value: value });
     }).then(function () {

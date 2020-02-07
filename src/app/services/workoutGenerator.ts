@@ -35,7 +35,8 @@ export class WorkoutGenerator {
                 indexes.push(i);
             }
         }
-        const idx = Math.floor(Math.random() * indexes.length);
+        const idxIdx = Math.floor(Math.random() * indexes.length);
+        const idx = indexes[idxIdx];
         const ex = exercises.splice(indexes[idx], 1)[0];
         const reps = Math.floor(Math.random() * 15 - 8) + 8;
         return new Exercise(

@@ -1,4 +1,5 @@
 <mat-card-title>Dashboard</mat-card-title>
+<button mat-raised-button (click)="showWorkoutGenerator()">Workout Generator</button>
 <mat-card *ngIf="today">
     <mat-card-title style="display: flex; flex-flow: row; justify-content: space-between;align-items:center;">
         <span>{{currentDate()}}</span>
@@ -14,6 +15,7 @@
     </mat-card-title>
 
     <mat-card-content >
+        
         <mat-table style="width: 100%;" [dataSource]="today.sortedMeals()">
                 <ng-container matColumnDef="name">
                     <mat-header-cell *matHeaderCellDef> {{ descHeader }} </mat-header-cell>

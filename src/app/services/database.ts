@@ -360,7 +360,7 @@ export class Database extends Dexie {
     public userPrefs: Dexie.Table<IUserPrefs, string>;
     public weightSets: Dexie.Table<IWeightSet, string>;
 
-    constructor(vers: number) {
+    constructor() {
         super('nutrition-data');
         this.version(1).stores({
             foods: '++id,desc,manufacturer',

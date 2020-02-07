@@ -1,0 +1,17 @@
+.workout-set {
+    display: grid;
+    grid-template-rows: 1fr;
+    grid-template-columns: 3fr 1fr;
+    grid-template-areas: 'name reps';
+    &.title {
+        font-weight: bold;
+        text-align: left;
+    }
+    .workout-name {
+        grid-area: name;
+    }
+    .workout-reps {
+        grid-area: reps;
+        text-align: center;
+    }
+}
